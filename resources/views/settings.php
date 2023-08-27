@@ -126,7 +126,7 @@ defined('ABSPATH') or die;
 <div class="grid grid-cols-1 md:grid-cols-[3fr_1fr] gap-4 lg:gap-8 mb-4">
     <div><
         <h3 class="mb-6 font-semibold text-lg leading-tight dark:text-white">
-            <?= __('Data', 'seeru-mtac') ?>
+            <?= __('Product data', 'seeru-mtac') ?>
         </h3>
 
         <?php $options = htmlentities(json_encode([
@@ -139,12 +139,36 @@ defined('ABSPATH') or die;
             <?= __('Name', 'seeru-mtac') ?>
         </vd-toggle>
 
-        <vd-toggle name="vdai_mtac_options[field][short_description]" checked="<?= vi_config('mtac.field.short_description', 'import-update') ?>" :options="<?= $options ?>">
-            <?= __('Short description', 'seeru-mtac') ?>
+        <vd-toggle name="vdai_mtac_options[field][description]" checked="<?= vi_config('mtac.field.description', 'import-update') ?>" :options="<?= $options ?>">
+            <?= __('Description', 'seeru-mtac') ?>
+        </vd-toggle>
+
+        <vd-toggle name="vdai_mtac_options[field][price]" checked="<?= vi_config('mtac.field.price', 'import-update') ?>" :options="<?= $options ?>">
+            <?= __('Price', 'seeru-mtac') ?>
+        </vd-toggle>
+
+        <vd-toggle name="vdai_mtac_options[field][attributes]" checked="<?= vi_config('mtac.field.attributes', 'import-update') ?>" :options="<?= $options ?>">
+            <?= __('Attributes', 'seeru-mtac') ?>
+        </vd-toggle>
+
+        <vd-toggle name="vdai_mtac_options[field][categories]" checked="<?= vi_config('mtac.field.categories', 'import-update') ?>" :options="<?= $options ?>">
+            <?= __('Categories', 'seeru-mtac') ?>
         </vd-toggle>
 
         <vd-toggle name="vdai_mtac_options[field][images]" checked="<?= vi_config('mtac.field.images', 'import-update') ?>" :options="<?= $options ?>">
             <?= __('Images', 'seeru-mtac') ?>
+        </vd-toggle>
+
+        <h3 class="mb-6 font-semibold text-lg leading-tight dark:text-white">
+            <?= __('Category data', 'seeru-mtac') ?>
+        </h3>
+        
+        <vd-toggle name="vdai_mtac_options[categories][field][name]" checked="<?= vi_config('mtac.categories.field.name', 'import-update') ?>" :options="<?= $options ?>">
+            <?= __('Name', 'seeru-mtac') ?>
+        </vd-toggle>
+
+        <vd-toggle name="vdai_mtac_options[categories][field][slug]" checked="<?= vi_config('mtac.categories.field.slug', 'import-update') ?>" :options="<?= $options ?>">
+            <?= __('Slug', 'seeru-mtac') ?>
         </vd-toggle>
     </div>
 
