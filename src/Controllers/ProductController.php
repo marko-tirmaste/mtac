@@ -45,7 +45,7 @@ class ProductController
             ? max((int) $_GET['page'], 1)
             : (int) get_option('vdisain_mtac_schedule_products_next_page', 1);
 
-        $perPage = isset($_GET['per_page']) ? (int) $_GET['per_page'] : 100;
+        $perPage = isset($_GET['per_page']) ? (int) $_GET['per_page'] : 1;
 
         if (vi()->isVerbose()) {
             Logger::describe('Updating products.');
