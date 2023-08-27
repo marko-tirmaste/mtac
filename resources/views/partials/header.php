@@ -12,10 +12,10 @@ $page = isset($_GET['page']) ? $_GET['page'] : null;
 
 $menu = [
     [
-        'label' => __('Settings', 'vdisain-mtac'), 
-        'url' => '/wp-admin/admin.php?page=vdisain-mtac', 
+        'label' => __('Settings', 'seeru-mtac'), 
+        'url' => '/wp-admin/admin.php?page=seeru-mtac', 
         'icon' => 'gears',
-        'active' => $page === 'vdisain-mtac',
+        'active' => $page === 'seeru-mtac',
     ],
 ];
 
@@ -25,6 +25,6 @@ $menu = [
     <vd-layout :menu="<?= htmlentities(json_encode($menu, JSON_HEX_QUOT), ENT_QUOTES) ?>">
         <template #title>
             <h2 class="mb-8 text-2xl font-semibold text-gray-900 dark:text-white">
-                <?= __('M-Tac Interface', 'vdisain-mtac') ?>
+                <?= __('M-Tac Interface', 'seeru-mtac') ?>
             </h2>
         </template>

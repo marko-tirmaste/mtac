@@ -102,7 +102,7 @@ class StockController
         $data = vi()->make(ProductService::class)->find($id);
 
         if (empty($data)) {
-            throw new NotFoundException(sprintf(__('Stock levels for %s not found!', 'vdisain-mtac'), $id));
+            throw new NotFoundException(sprintf(__('Stock levels for %s not found!', 'seeru-mtac'), $id));
         }
 
         $this->update(vi_collect($data['sizes']['size']));

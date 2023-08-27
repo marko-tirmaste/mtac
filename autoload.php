@@ -2,7 +2,7 @@
 
 spl_autoload_register(function ($class) {
     /* @var $prefix string */
-    $prefix = 'Vdisain\\Mtac\\';
+    $prefix = 'Seeru\\Mtac\\';
 
     /* @var $length int */
     $length = strlen($prefix);

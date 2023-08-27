@@ -69,7 +69,7 @@ class UpdateSingleEndpoint extends Endpoint implements EndpointContract
         vi()->make(ProductController::class)->updateProduct($id);
 
         return new \WP_REST_Response([
-            'message' => __('Product has been updated from the mtac.', 'vdisain-mtac'),
+            'message' => __('Product has been updated from the mtac.', 'seeru-mtac'),
             'id' => $id,
             'mtac_id' => get_post_meta($id, '_mtac_id', true),
             'log' => Logger::array(),

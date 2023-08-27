@@ -86,7 +86,7 @@ class AdminView extends View
             __('mtac', 'vdisain-interfaces'),
             __('mtac', 'vdisain-interfaces'),
             'manage_options',
-            'vdisain-mtac',
+            'seeru-mtac',
             function (): void {
                 echo (new static())->render('settings', VDAI_PATH_PACKAGES . '/mtac/resources');
             },

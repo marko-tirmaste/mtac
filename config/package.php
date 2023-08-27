@@ -5,8 +5,8 @@
 defined('VDAI_PATH') or die;
 
 return [
-    'name' => __('M-Tac', 'vdisain-mtac'),
-    'description' => __('Syncs M-Tac products from XML Feed to WooCommerce.', 'vdisain-mtac'),
+    'name' => __('M-Tac', 'seeru-mtac'),
+    'description' => __('Syncs M-Tac products from XML Feed to WooCommerce.', 'seeru-mtac'),
     'slug' => 'mtac',
     'version' => '0.0.1',
     'type' => 'interface',
