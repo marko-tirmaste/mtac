@@ -7,17 +7,20 @@ return [
     'namespace' => 'mtac',
 
     'endpoints' => [
+        // Categories
+        \Seeru\Mtac\Endpoints\Category\ImportEndpoint::class,
+
         // Products
-        \Vdisain\Mtac\Endpoints\Product\ImportEndpoint::class,
-        \Vdisain\Mtac\Endpoints\Product\ImportSingleEndpoint::class,
-        \Vdisain\Mtac\Endpoints\Product\UpdateSingleEndpoint::class,
+        \Seeru\Mtac\Endpoints\Product\ImportEndpoint::class,
+        \Seeru\Mtac\Endpoints\Product\ImportSingleEndpoint::class,
+        \Seeru\Mtac\Endpoints\Product\UpdateSingleEndpoint::class,
 
         // Stock levels
-        \Vdisain\Mtac\Endpoints\Stock\ImportEndpoint::class,
-        \Vdisain\Mtac\Endpoints\Stock\ImportSingleEndpoint::class,
-        \Vdisain\Mtac\Endpoints\Stock\UpdateSingleEndpoint::class,
+        \Seeru\Mtac\Endpoints\Stock\ImportEndpoint::class,
+        \Seeru\Mtac\Endpoints\Stock\ImportSingleEndpoint::class,
+        \Seeru\Mtac\Endpoints\Stock\UpdateSingleEndpoint::class,
 
         // Cron
-        \Vdisain\Mtac\Endpoints\CronEndpoint::class,
+        \Seeru\Mtac\Endpoints\CronEndpoint::class,
     ],
 ];

@@ -3,14 +3,14 @@
 /**
  * Endpoint for syncing mtac product to Woocommerce product
  * 
- * @author Web Design Agency OÜ <info@vdisain.ee>
- * @package Vdisain\Mtac\Endpoints\Product
- * @since 1.3.0 2023-04-17
+ * @author Marko Tirmaste <marko.tirmaste@gmail.com>
+ * @package Seeru\Mtac\Endpoints\Product
+ * @since 1.0.0 2023-04-17
  */
 
-namespace Vdisain\Mtac\Endpoints\Product;
+namespace Seeru\Mtac\Endpoints\Product;
 
-use Vdisain\Mtac\Controllers\ProductController;
+use Seeru\Mtac\Controllers\ProductController;
 use Vdisain\Plugins\Interfaces\Support\Logger;
 use Vdisain\Plugins\Interfaces\Support\Rest\Endpoint;
 use Vdisain\Plugins\Interfaces\Support\Contracts\Rest\EndpointContract;
@@ -18,8 +18,8 @@ use Vdisain\Plugins\Interfaces\Support\Contracts\Rest\EndpointContract;
 /**
  * Endpoint for syncing mtac product to Woocommerce product
  * 
- * @package Vdisain\Mtac\Endpoints\Product
- * @since 1.3.0 2023-04-17
+ * @package Seeru\Mtac\Endpoints\Product
+ * @since 1.0.0 2023-04-17
  */
 class UpdateSingleEndpoint extends Endpoint implements EndpointContract
 {

@@ -2,7 +2,7 @@
 /** 
  * Template partial for the page header part
  * 
- * @author Web Design Agency OÜ <info@vdisain.ee>
+ * @author Marko Tirmaste <marko.tirmaste@gmail.com>
  * @since 0.0.1 2023-06-22
  */
 

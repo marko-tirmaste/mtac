@@ -2,11 +2,11 @@
 /**
  * View class for mtac admin page
  * 
- * @author Web Design Agency OÜ <info@vdisain.ee>
- * @package Vdisain\Mtac\Views
- * @since 1.3.0 2023-05-04
+ * @author Marko Tirmaste <marko.tirmaste@gmail.com>
+ * @package Seeru\Mtac\Views
+ * @since 1.0.0 2023-05-04
  */
-namespace Vdisain\Mtac\Views;
+namespace Seeru\Mtac\Views;
 
 defined('VDAI_PATH') or die;
 
@@ -18,8 +18,8 @@ use Vdisain\Plugins\Interfaces\Models\Settings;
 /**
  * View class for mtac admin page
  * 
- * @package Vdisain\Mtac\Views
- * @since 1.3.0 2023-05-04
+ * @package Seeru\Mtac\Views
+ * @since 1.0.0 2023-05-04
  */
 class AdminView extends View
 {

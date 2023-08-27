@@ -2,15 +2,15 @@
 /**
  * Controller class for handling actions with M-Tac stock levels
  * 
- * @author Web Design Agency OÜ <info@vdisain.ee>
- * @package Vdisain\Mtac\Controllers
- * @since 1.3.0 2023-07-28
+ * @author Marko Tirmaste <marko.tirmaste@gmail.com>
+ * @package Seeru\Mtac\Controllers
+ * @since 1.0.0 2023-07-28
  */
-namespace Vdisain\Mtac\Controllers;
+namespace Seeru\Mtac\Controllers;
 
 defined('VDAI_PATH') or die;
 
-use Vdisain\Mtac\Services\ProductService;
+use Seeru\Mtac\Services\ProductService;
 use Vdisain\Plugins\Interfaces\Support\Collection;
 use Vdisain\Plugins\Interfaces\Exceptions\NotFoundException;
 use Vdisain\Plugins\Interfaces\Repositories\ProductRepository;
@@ -19,8 +19,8 @@ use Vdisain\Plugins\Interfaces\Support\Logger;
 /**
  * Controller class for handling actions with M-Tac stock levels
  * 
- * @package Vdisain\Mtac\Controllers
- * @since 1.3.0 2023-07-28
+ * @package Seeru\Mtac\Controllers
+ * @since 1.0.0 2023-07-28
  */
 class StockController
 {

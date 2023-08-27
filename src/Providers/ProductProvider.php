@@ -2,18 +2,18 @@
 /**
  * Provider class for package product actions and filters registrations
  * 
- * @author Web Design Agency OÜ <info@vdisain.ee>
- * @package Vdisain\Mtac\Providers
+ * @author Marko Tirmaste <marko.tirmaste@gmail.com>
+ * @package Seeru\Mtac\Providers
  * @since 0.0.1 2023-06-09
  */
-namespace Vdisain\Mtac\Providers;
+namespace Seeru\Mtac\Providers;
 
 defined('VDAI_PATH') or die;
 
 /**
  * Provider class for package product actions and filters registrations
  * 
- * @package Vdisain\Mtac\Providers
+ * @package Seeru\Mtac\Providers
  * @since 0.0.1 2023-06-09
  */
 class ProductProvider

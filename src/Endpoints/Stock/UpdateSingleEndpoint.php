@@ -4,14 +4,14 @@
  * Endpoint for syncing mtac stock level to Woocommerce stock level.
  * Gets product by WooCommerce product ID.
  * 
- * @author Web Design Agency OÜ <info@vdisain.ee>
- * @package Vdisain\Mtac\Endpoints\Stock
- * @since 1.3.0 2023-05-15
+ * @author Marko Tirmaste <marko.tirmaste@gmail.com>
+ * @package Seeru\Mtac\Endpoints\Stock
+ * @since 1.0.0 2023-05-15
  */
 
-namespace Vdisain\Mtac\Endpoints\Stock;
+namespace Seeru\Mtac\Endpoints\Stock;
 
-use Vdisain\Mtac\Controllers\StockController;
+use Seeru\Mtac\Controllers\StockController;
 use Vdisain\Plugins\Interfaces\Support\Logger;
 use Vdisain\Plugins\Interfaces\Support\Rest\Endpoint;
 use Vdisain\Plugins\Interfaces\Support\Contracts\Rest\EndpointContract;
@@ -20,8 +20,8 @@ use Vdisain\Plugins\Interfaces\Support\Contracts\Rest\EndpointContract;
  * Endpoint for syncing mtac stock level to Woocommerce stock level.
  * Gets product by WooCommerce product ID.
  * 
- * @package Vdisain\Mtac\Endpoints\Stock
- * @since 1.3.0 2023-05-15
+ * @package Seeru\Mtac\Endpoints\Stock
+ * @since 1.0.0 2023-05-15
  */
 class UpdateSingleEndpoint extends Endpoint implements EndpointContract
 {

@@ -2,11 +2,11 @@
 /**
  * View template for M-Tac options
  * 
- * @author Web Design Agency OÜ <info@vdisain.ee>
+ * @author Marko Tirmaste <marko.tirmaste@gmail.com>
  */
 defined('ABSPATH') or die;
 
-/** @var \Vdisain\Mtac\Views\AdminView $this */
+/** @var \Seeru\Mtac\Views\AdminView $this */
 
 ?>
 

@@ -2,22 +2,22 @@
 /**
  * Provider class for package cron job registration
  * 
- * @author Web Design Agency OÜ <info@vdisain.ee>
- * @package Vdisain\Mtac\Providers
- * @since 1.3.0 2023-05-17
+ * @author Marko Tirmaste <marko.tirmaste@gmail.com>
+ * @package Seeru\Mtac\Providers
+ * @since 1.0.0 2023-05-17
  */
-namespace Vdisain\Mtac\Providers;
+namespace Seeru\Mtac\Providers;
 
 defined('VDAI_PATH') or die;
 
-use Vdisain\Mtac\Controllers\ProductController;
-use Vdisain\Mtac\Controllers\StockController;
+use Seeru\Mtac\Controllers\ProductController;
+use Seeru\Mtac\Controllers\StockController;
 
 /**
  * Provider class for package cron job registration
  * 
- * @package Vdisain\Mtac\Providers
- * @since 1.3.0 2023-05-17
+ * @package Seeru\Mtac\Providers
+ * @since 1.0.0 2023-05-17
  */
 class CronProvider
 {

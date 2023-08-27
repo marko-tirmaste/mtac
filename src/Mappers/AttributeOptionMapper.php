@@ -1,12 +1,12 @@
 <?php
 /**
- * Mapper class for mtac product attribute option
+ * Mapper class for M-Tac product attribute option
  * 
- * @author Web Design Agency OÜ <info@vdisain.ee>
- * @package Vdisain\Mtac\Mappers
- * @since 1.3.0 2023-04-24
+ * @author Marko Tirmaste <marko.tirmaste@gmail.com>
+ * @package Seeru\Mtac\Mappers
+ * @since 1.0.0
  */
-namespace Vdisain\Mtac\Mappers;
+namespace Seeru\Mtac\Mappers;
 
 defined('ABSPATH') or die;
 
@@ -14,17 +14,17 @@ use Vdisain\Plugins\Interfaces\Support\Contracts\MapperContract;
 use Vdisain\Plugins\Interfaces\Support\Mapper;
 
 /**
- * Mapper class for mtac product attribute option
+ * Mapper class for M-Tac product attribute option
  * 
- * @package Vdisain\Mtac\Mappers
- * @since 1.3.0 2023-04-24
+ * @package Seeru\Mtac\Mappers
+ * @since 1.0.0
  */
 class AttributeOptionMapper extends Mapper implements MapperContract, \JsonSerializable
 {
     /**
-     * Maps mtac product attribute option data to the WooCommerce product attribute option data
+     * Maps M-Tac product attribute option data to the WooCommerce product attribute option data
      * 
-     * @param array $data mtac product attribute data
+     * @param string $data M-Tac attribute option value
      * 
      * @return array
      */
@@ -32,7 +32,7 @@ class AttributeOptionMapper extends Mapper implements MapperContract, \JsonSeria
     {
         return [
             'name' => [
-                'et' => $data['name']
+                'et' => $data,
             ],
         ];
     }

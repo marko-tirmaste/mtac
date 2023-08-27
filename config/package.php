@@ -16,7 +16,7 @@ return [
      | -------------------------------------------------------------------------------- */
     'admin' => [
         'views' => [
-            \Vdisain\Mtac\Views\AdminView::class,
+            \Seeru\Mtac\Views\AdminView::class,
         ],
     ],
 
@@ -28,6 +28,6 @@ return [
     ],
 
     'options' => [
-        \Vdisain\Mtac\Controllers\OptionController::class,
+        \Seeru\Mtac\Controllers\OptionController::class,
     ]
 ];

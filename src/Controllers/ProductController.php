@@ -2,16 +2,16 @@
 /**
  * Controller class for handling actions with M-Tac products
  * 
- * @author Web Design Agency OÜ <info@vdisain.ee>
- * @package Vdisain\Mtac\Controllers
- * @since 1.3.0 2023-05-09
+ * @author Marko Tirmaste <marko.tirmaste@gmail.com>
+ * @package Seeru\Mtac\Controllers
+ * @since 1.0.0 2023-05-09
  */
-namespace Vdisain\Mtac\Controllers;
+namespace Seeru\Mtac\Controllers;
 
 defined('VDAI_PATH') or die;
 
-use Vdisain\Mtac\Mappers\ProductMapper;
-use Vdisain\Mtac\Services\ProductService;
+use Seeru\Mtac\Mappers\ProductMapper;
+use Seeru\Mtac\Services\ProductService;
 use Vdisain\Plugins\Interfaces\Exceptions\NotFoundException;
 use Vdisain\Plugins\Interfaces\Repositories\ProductRepository;
 use Vdisain\Plugins\Interfaces\Support\Collection;
@@ -26,8 +26,8 @@ ini_set('xdebug.var_display_max_data', '-1');
 /**
  * Controller class for handling actions with M-Tac products
  * 
- * @package Vdisain\Mtac\Controllers
- * @since 1.3.0 2023-05-09
+ * @package Seeru\Mtac\Controllers
+ * @since 1.0.0 2023-05-09
  */
 class ProductController
 {
@@ -39,7 +39,7 @@ class ProductController
     public function import(): array
     {
         $now = time();
-        $products = (new ProductService())->get();
+        $products = $this->groupVariations((new ProductService())->get());
 
         $page = isset($_GET['page']) 
             ? max((int) $_GET['page'], 1)
@@ -48,7 +48,7 @@ class ProductController
         $perPage = isset($_GET['per_page']) ? (int) $_GET['per_page'] : 100;
 
         if (vi()->isVerbose()) {
-            Logger::describe('Updateing products.');
+            Logger::describe('Updating products.');
             Logger::describe(sprintf('Page %s, per page %s, total %s.', $page, $perPage, $products->count()));
         }
 
@@ -71,7 +71,7 @@ class ProductController
     public function importAll(): array
     {
         $now = time();
-        $products = (new ProductService())->get();
+        $products = $this->groupVariations((new ProductService())->get());
 
         $this->processImport($products);
 
@@ -127,6 +127,13 @@ class ProductController
         $this->importProduct($code);
     }
 
+    protected function groupVariations(Collection $products): Collection
+    {
+        return $products->groupBy(function (array $product): string {
+            return $this->titleWithoutAttributes($product);
+        });
+    }
+
     /**
      * Processes the imported products
      * 
@@ -140,8 +147,10 @@ class ProductController
             $page = 1;
         }
 
+        //file_put_contents(__DIR__ . '/dump.json', json_encode($products, JSON_PRETTY_PRINT));
+
         if (empty($perPage)) {
-            $products->each(function (array $data): void {
+            $products->each(function (Collection $data): void {
                 $this->processProductImport($data);
             });
 
@@ -154,25 +163,42 @@ class ProductController
                 return $index + 1 === $page;
             })
             ->each(function (Collection $products): void {
-                $products->each(function (array $data): void {
+                $products->each(function (Collection $data): void {
                     $this->processProductImport($data);
                 });
             });
     }
 
-    private function processProductImport(array $data): void
+    private function processProductImport(Collection $data): void
     {
         try {
-            $map = (new ProductMapper($data))->toArray();
+            $product = $data->first();
+            if ($data->count() > 1) {
+                $product['title'] = $this->titleWithoutAttributes($product);
+                $product['gtin'] = null;
+                $product['variations'] = $data;
+            }
+            $map = (new ProductMapper($product))->toArray();
 
             if (vi()->isVerbose()) {
                 Logger::describe('ProductController::processProductImport() $map');
                 Logger::dump($map);
             }
 
-            //vi()->make(ProductRepository::class)->updateOrCreate($map);
+            vi()->make(ProductRepository::class)->updateOrCreate($map);
         } catch (\Throwable $error) {
             Logger::warn($error->getMessage() . ' ' . $error->getFile() . ' ' . $error->getLine());
         }
+    }
+
+    protected function titleWithoutAttributes(array $product): string
+    {
+        return trim(
+            str_replace(
+                trim(($product['color'] ?? '') . ' ' . ($product['size'] ?? '')),
+                '',
+                is_array($product['title']) ? array_shift($product['title']) ?? '' : $product['title']
+            )
+        );
     }
 }

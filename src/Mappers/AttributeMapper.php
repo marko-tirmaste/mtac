@@ -2,11 +2,11 @@
 /**
  * Mapper class for M-Tac attribute
  * 
- * @author Web Design Agency OÜ <info@vdisain.ee>
- * @package Vdisain\Mtac\Mappers
- * @since 1.3.0 2023-07-26
+ * @author Marko Tirmaste <marko.tirmaste@gmail.com>
+ * @package Seeru\Mtac\Mappers
+ * @since 1.0.0 2023-07-26
  */
-namespace Vdisain\Mtac\Mappers;
+namespace Seeru\Mtac\Mappers;
 
 defined('ABSPATH') or die;
 
@@ -17,8 +17,8 @@ use Vdisain\Plugins\Interfaces\Support\Mapper;
 /**
  * Mapper class for M-Tac attribute
  * 
- * @package Vdisain\Mtac\Mappers
- * @since 1.3.0 2023-07-26
+ * @package Seeru\Mtac\Mappers
+ * @since 1.0.0 2023-07-26
  */
 class AttributeMapper extends Mapper implements MapperContract, \JsonSerializable
 {

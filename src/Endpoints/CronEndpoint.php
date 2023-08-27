@@ -3,15 +3,15 @@
 /**
  * Endpoint for mtac cron sync (Categories, products and stock)
  * 
- * @author Web Design Agency OÜ <info@vdisain.ee>
- * @package Vdisain\Mtac\Endpoints
+ * @author Marko Tirmaste <marko.tirmaste@gmail.com>
+ * @package Seeru\Mtac\Endpoints
  * @since 1.0.0 2023-07-28
  */
 
-namespace Vdisain\Mtac\Endpoints;
+namespace Seeru\Mtac\Endpoints;
 
-use Vdisain\Mtac\Controllers\ProductController;
-use Vdisain\Mtac\Controllers\StockController;
+use Seeru\Mtac\Controllers\ProductController;
+use Seeru\Mtac\Controllers\StockController;
 use Vdisain\Plugins\Interfaces\Support\Logger;
 use Vdisain\Plugins\Interfaces\Support\Rest\Endpoint;
 use Vdisain\Plugins\Interfaces\Support\Contracts\Rest\EndpointContract;
@@ -21,7 +21,7 @@ set_time_limit(0);
 /**
  * Endpoint for mtac cron sync (Categories, products and stock)
  * 
- * @package Vdisain\Mtac\Endpoints
+ * @package Seeru\Mtac\Endpoints
  * @since 1.0.0 2023-07-28
  */
 class CronEndpoint extends Endpoint implements EndpointContract

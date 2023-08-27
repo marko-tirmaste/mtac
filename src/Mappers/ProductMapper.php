@@ -2,27 +2,32 @@
 /**
  * Mapper class for mtac product
  * 
- * @author Web Design Agency OÜ <info@vdisain.ee>
- * @package Vdisain\Mtac\Mappers
- * @since 1.3.0 2023-05-09
+ * @author Marko Tirmaste <marko.tirmaste@gmail.com>
+ * @package Seeru\Mtac\Mappers
+ * @since 1.0.0 2023-05-09
  */
-namespace Vdisain\Mtac\Mappers;
+namespace Seeru\Mtac\Mappers;
+use Vdisain\Plugins\Interfaces\Repositories\CategoryRepository;
 
 defined('ABSPATH') or die;
 
 use Vdisain\Plugins\Interfaces\Support\Contracts\MapperContract;
+use Vdisain\Plugins\Interfaces\Support\Collection;
 use Vdisain\Plugins\Interfaces\Support\Logger;
 use Vdisain\Plugins\Interfaces\Repositories\ProductRepository;
 use Vdisain\Plugins\Interfaces\Support\Mapper;
+use WP_Term;
 
 /**
  * Mapper class for mtac product
  * 
- * @package Vdisain\Mtac\Mappers
- * @since 1.3.0 2023-05-09
+ * @package Seeru\Mtac\Mappers
+ * @since 1.0.0 2023-05-09
  */
 class ProductMapper extends Mapper implements MapperContract
 {
+    protected static Collection $categories;
+    
     /**
      * Maps mtac product data to the WooCommerce product data
      * 
@@ -33,20 +38,32 @@ class ProductMapper extends Mapper implements MapperContract
     public function map($data): array
     {
         $map = [
-            'id' => $this->mapId($data['id']),
+            'id' => $this->mapId($data),
             'parent_id' => null,
             'status' => 'publish',
-            'sku' => $data['gtin'] ?? null,
+            //'sku' => $data['gtin'] ?? null,
             'type' => $this->mapType($data),
-            'quantity' => $data['quantity'] ?? 0,
-            'variations' => !empty($data['id']) ? $this->mapVariations($data['sizes']) : null,
+            //'quantity' => $data['quantity'] ?? 0,
+            'manage_stock' => false,
+            'stock_status' => !empty($data['availability']) && $data['availability'] === 'in stock' ? 'instock' : 'outofstock',
             'meta' => [
-                '_mtac_id' => $data['id'],
-                '_condition' => $data['condition'] ?? null
+                '_mtac_id' => empty($data['variations']) ? $data['id'] : null,
+                '_condition' => $data['condition'] ?? null,
+                //'_sku' => !empty($data['gtin']) ? $data['gtin'] : null,
             ],
         ];
 
         $isNew = empty($map['id']);
+
+        if (!empty($data['gtin'])) {
+            $map['meta']['_sku'] = $data['gtin'];
+        }
+
+        if (!empty($data['variations'])) {
+            $map['variations'] = $data['variations']->map(function (array $variation): ProductMapper {
+                return new ProductMapper($variation);
+            });
+        }
 
         if ($this->isMapping('name', $isNew)) {
             $map['name'] = [
@@ -81,7 +98,6 @@ class ProductMapper extends Mapper implements MapperContract
         return $map;
     }
 
-
     /**
      * Checks if field should be mapped
      * 
@@ -95,6 +111,7 @@ class ProductMapper extends Mapper implements MapperContract
         $rule = vi_config('mtac.field.' . $field, 'import-update');
         return !(empty($rule) || ($rule === 'import' && !$isNew));
     }
+
     private function mapVariations(array $data): array 
     {
         return vi_collect($data['size'])->map(function(array $data): array {
@@ -111,11 +128,25 @@ class ProductMapper extends Mapper implements MapperContract
      */
     private function mapAttributes(array $data): ?array
     {
-        return [
-           'brand' => new AttributeMapper(['key' => 'brand', 'data' => $data,]),
-           'color' => new AttributeMapper(['key' => 'color', 'data' => $data,]),
-           'size' => new AttributeMapper(['key' => 'size', 'data' => $data,]),
-        ];
+        $attributes = [];
+
+        if (!empty($data['brand'])) {
+            $attributes['brand'] = new BrandToAttributeMapper($data['brand']);
+        }
+
+        if (!empty($data['color'])) {
+            $attributes['color'] = new ColorToAttributeMapper(
+                !empty($data['variations']) ? $data['variations']->pluck('color') : vi_collect([$data['color']])
+            );
+        }
+
+        if (!empty($data['size'])) {
+            $attributes['size'] = new SizeToAttributeMapper(
+                !empty($data['variations']) ? $data['variations']->pluck('size') : vi_collect([$data['size']])
+            );
+        }
+
+        return $attributes;
     }
 
     /**
@@ -127,17 +158,34 @@ class ProductMapper extends Mapper implements MapperContract
      */
     private function mapCategories(array $data): ?array
     {
-        return [];
+        if (empty(static::$categories)) {
+            static::$categories = vi()->make(CategoryRepository::class)->all();
+        }
+
+        $path = array_map(
+            function (string $name): string {
+                return sanitize_title($name);
+            },
+            explode(' / ', $data['product_type'])
+        );
+
+        return static::$categories
+            ->filter(function (WP_Term $term) use ($path): bool {
+                return in_array($term->slug, $path);
+            })
+            ->pluck('term_id')
+            ->values()
+            ->all();
     }
 
     /**
      * Gets WooCommerce product ID
      * 
-     * @param string $mtacId M-Tac product ID
+     * @param array $data M-Tac product data
      * 
      * @return int
      */
-    private function mapId(string $mtacId): ?int
+    private function mapId(array $data): ?int
     {
         /* $id = (int) wc_get_product_id_by_sku($mtacId);
 
@@ -152,7 +200,7 @@ class ProductMapper extends Mapper implements MapperContract
                 'meta_query' => [
                     [
                         'key' => '_mtac_id',
-                        'value' => $mtacId,
+                        'value' => $data['id'],
                         'compare' => '=',
                     ],
                 ],
@@ -170,11 +218,13 @@ class ProductMapper extends Mapper implements MapperContract
             ])
         )->first();
 
+        $id = !empty($product->post_parent) ? $product->post_parent : ($product->ID ?? null);
+
         if (vi()->isVerbose()) {
-            Logger::describe("ID: {$product->ID}");
+            Logger::describe(sprintf('ID: %s', $id ?? 'not found'));
         }
 
-        return $product->ID ?? null;
+        return $id;
     }
 
     /**
@@ -214,6 +264,6 @@ class ProductMapper extends Mapper implements MapperContract
      */
     private function mapType(array $data): string
     {   
-        return /* !empty($data['id']) ? ProductRepository::TYPE_VARIABLE : */ ProductRepository::TYPE_SIMPLE;
+        return !empty($data['variations']) ? ProductRepository::TYPE_VARIABLE : ProductRepository::TYPE_SIMPLE;
     }
 }

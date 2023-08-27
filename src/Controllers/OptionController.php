@@ -2,19 +2,19 @@
 /**
  * Controller class for handling actions with package Wordpress options
  * 
- * @author Web Design Agency OÜ <info@vdisain.ee>
- * @package Vdisain\Mtac\Controllers
- * @since 1.3.0 2023-05-10
+ * @author Marko Tirmaste <marko.tirmaste@gmail.com>
+ * @package Seeru\Mtac\Controllers
+ * @since 1.0.0 2023-05-10
  */
-namespace Vdisain\Mtac\Controllers;
+namespace Seeru\Mtac\Controllers;
 
 defined('VDAI_PATH') or die;
 
 /**
  * Controller class for handling actions with package Wordpress options
  * 
- * @package Vdisain\Mtac\Controllers
- * @since 1.3.0 2023-05-10
+ * @package Seeru\Mtac\Controllers
+ * @since 1.0.0 2023-05-10
  */
 class OptionController
 {

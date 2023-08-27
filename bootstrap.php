@@ -11,6 +11,10 @@ if (empty(vi()->settings()->common['module']['mtac'])) {
     return;
 }
 
+if (!defined('VDAI_PATH_CACHE_MTAC')) {
+    define('VDAI_PATH_CACHE_MTAC', WP_CONTENT_DIR . '/uploads/vdisain-api-interfaces/mtac');
+}
+
 /* --------------------------------------------------------------------------------
  | Providers
  | --------------------------------------------------------------------------------
@@ -19,6 +23,5 @@ if (empty(vi()->settings()->common['module']['mtac'])) {
  |
  | -------------------------------------------------------------------------------- */
 
-vi()->make(\Vdisain\Mtac\Providers\CategoryProvider::class)->register();
-vi()->make(\Vdisain\Mtac\Providers\CronProvider::class)->register();
-vi()->make(\Vdisain\Mtac\Providers\ProductProvider::class)->register();
+vi()->make(\Seeru\Mtac\Providers\CronProvider::class)->register();
+vi()->make(\Seeru\Mtac\Providers\ProductProvider::class)->register();
