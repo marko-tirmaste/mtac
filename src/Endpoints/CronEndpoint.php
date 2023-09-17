@@ -15,6 +15,7 @@ use Seeru\Mtac\Controllers\StockController;
 use Vdisain\Plugins\Interfaces\Support\Logger;
 use Vdisain\Plugins\Interfaces\Support\Rest\Endpoint;
 use Vdisain\Plugins\Interfaces\Support\Contracts\Rest\EndpointContract;
+use Vdisain\Plugins\Interfaces\Support\Log\Log;
 
 set_time_limit(0);
 
@@ -135,6 +136,8 @@ class CronEndpoint extends Endpoint implements EndpointContract
 
         $result = vi()->make(ProductController::class)->import();
         Logger::describe('Product sync at ' . date('Y-m-d H:i:s'));
+
+        Log::info('Product update executed', $result);
 
         if ($result['processed'] >= $result['total']) {
             vi()->make(ProductController::class)->destroy();
