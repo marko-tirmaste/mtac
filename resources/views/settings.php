@@ -43,11 +43,12 @@ defined('ABSPATH') or die;
             <?= __('Product Sync', 'vdisain-interfaces') ?>
         </h3>
 
-        <vd-field 
-            name="vdai_mtac_options[markup]"
-            value="<?= vi_config('mtac.markup') ?>" 
-        >
+        <vd-field name="vdai_mtac_options[markup]" value="<?= vi_config('mtac.markup') ?>">
             <?= __('Add price markup %', 'seeru-mtac') ?>
+        </vd-field>
+
+        <vd-field name="vdai_mtac_options[vat]" value="<?= vi_config('mtac.vat') ?>">
+            <?= __('Add VAT %', 'seeru-mtac') ?>
         </vd-field>
 
         <vd-select
@@ -62,31 +63,18 @@ defined('ABSPATH') or die;
             <?= __('Cron', 'seeru-mtac') ?>
         </vd-select>
 
-        <vd-select
-            default="<?= __('Disabled', 'vdisain-interfaces') ?>"
-            name="vdai_mtac_options[schedule][products]"
-            :options="<?= htmlentities(json_encode($this->schedules, JSON_HEX_QUOT), ENT_QUOTES) ?>"
-            value="<?= vi_config('mtac.schedule.products') ?>" 
-        >
-            <?= __('Products', 'vdisain-interfaces') ?>
-        </vd-select>
+        <vd-field name="vdai_mtac_options[schedule][products][time]" value="<?= vi_config('mtac.schedule.products.time') ?>">
+            <?= __('Products cron start', 'seeru-mtac') ?>
+        </vd-field>
 
         <vd-select
             default="<?= __('Disabled', 'vdisain-interfaces') ?>"
-            name="vdai_mtac_options[schedule][stock]"
+            name="vdai_mtac_options[schedule][products][interval]"
             :options="<?= htmlentities(json_encode($this->schedules, JSON_HEX_QUOT), ENT_QUOTES) ?>"
-            value="<?= vi_config('mtac.schedule.stock') ?>" 
+            value="<?= vi_config('mtac.schedule.products.interval') ?>" 
         >
-            <?= __('Stock', 'vdisain-interfaces') ?>
+            <?= __('Products cron interval', 'vdisain-interfaces') ?>
         </vd-select>
-
-        <vd-autocomplete
-            name="vdai_mtac_options[category]"
-            :options="<?= htmlentities(json_encode($this->categories, JSON_HEX_QUOT), ENT_QUOTES) ?>"
-            value="<?= vi_config('mtac.category') ?>" 
-        >
-            <?= __('Category to import to', 'seeru-mtac') ?>
-        </vd-autocomplete>
     </div>
 
     <div class="grid grid-cols-1 place-content-start p-4 bg-gray-200 dark:bg-gray-800 rounded dark:text-white">
@@ -98,18 +86,6 @@ defined('ABSPATH') or die;
             <template #trigger><?= __('Import products', 'seeru-mtac') ?></template>
             <template #header><?= __('Product importing', 'seeru-mtac') ?></template>
             <vi-product-sync service="mtac"></vi-product-sync>
-        </vi-dialog>
-
-        <hr class="w-full h-px my-4 bg-gray-200 border-0">
-
-        <p class="mb-6 text-sm text-black/70 dark:text-gray-100">
-            <?= __('Update all stocks', 'seeru-mtac') ?>
-        </p>
-    
-        <vi-dialog>
-            <template #trigger><?= __('Update stock', 'seeru-mtac') ?></template>
-            <template #header><?= __('Stock updating', 'seeru-mtac') ?></template>
-            <vi-stock-sync service="mtac"></vi-stock-sync>
         </vi-dialog>
 
         <hr class="w-full h-px my-4 bg-gray-200 border-0">
@@ -128,6 +104,19 @@ defined('ABSPATH') or die;
         <h3 class="mb-6 font-semibold text-lg leading-tight dark:text-white">
             <?= __('Product data', 'seeru-mtac') ?>
         </h3>
+
+        <vd-toggle 
+            name="vdai_mtac_options[new_status]" 
+            checked="<?= vi_config('mtac.new_status', 0) ?>" 
+            :options="<?= htmlentities(json_encode([
+               0 => __('Published', 'seeru-mtac'),
+               'draft' => __('Draft', 'seeru-mtac'),
+               'private' => __('Private', 'seeru-mtac'),
+           ])) ?>"
+           class="mb-4"
+        >
+            <?= __('New product status', 'seeru-mtac') ?>
+        </vd-toggle>
 
         <?php $options = htmlentities(json_encode([
             0 => __('Off', 'seeru-mtac'), 

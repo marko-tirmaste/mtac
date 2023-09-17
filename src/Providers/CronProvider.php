@@ -11,7 +11,7 @@ namespace Seeru\Mtac\Providers;
 defined('VDAI_PATH') or die;
 
 use Seeru\Mtac\Controllers\ProductController;
-use Seeru\Mtac\Controllers\StockController;
+use Vdisain\Plugins\Interfaces\Support\Log\Log;
 
 /**
  * Provider class for package cron job registration
@@ -26,39 +26,45 @@ class CronProvider
      */
     public function register(): void
     {
-        $this->scheduleProductSync();
-        $this->scheduleStockSync();
-    }
-
-    /**
-     * Schedules the product sync job
-     */
-    private function scheduleProductSync(): void
-    {
-        if (empty(vi()->settings()->mtac['schedule']['products'])) {
+        if (empty(vi_config('mtac.schedule.products.time'))) {
             return;
         }
 
-        if (!wp_next_scheduled('vdisain_interfaces/mtac/products')) {
-            wp_schedule_event(time(), vi()->settings()->mtac['schedule']['products'], 'vdisain_interfaces/mtac/products');
+        if (!wp_next_scheduled('vdisain_interfaces/mtac/products/update')) {
+            $time = explode(':', vi_config('mtac.schedule.products.time'));
+
+            $timestamp = strtotime(
+                sprintf(
+                    '%s %s:%s:%s', 
+                    date('Y-m-d'), 
+                    str_pad($time[0] ?? '00', 2, '0', STR_PAD_LEFT),
+                    str_pad($time[1] ?? '00', 2, '0', STR_PAD_LEFT),
+                    str_pad($time[2] ?? '00', 2, '0', STR_PAD_LEFT),
+                )
+            );
+
+            if ($timestamp < time()) {
+                $timestamp += 86400;
+            }
+
+            wp_schedule_single_event($timestamp, 'vdisain_interfaces/mtac/products/update');
         }
 
-        add_action('vdisain_interfaces/mtac/products', [vi()->make(ProductController::class), 'import']);
+        add_action('vdisain_interfaces/mtac/products/update', [$this, 'handle']);
+        add_action('vdisain_interfaces/mtac/products/destroy', [vi()->make(ProductController::class), 'destroy']);
     }
 
-    /**
-     * Schedules the stock sync job
-     */
-    private function scheduleStockSync(): void
+    public function handle(): void
     {
-        if (empty(vi()->settings()->mtac['schedule']['stock'])) {
+        $result = vi()->make(ProductController::class)->import();
+
+        Log::info('Product update executed', $result);
+
+        if ($result['processed'] < $result['total']) {
+            wp_schedule_single_event(time() + 600, 'vdisain_interfaces/mtac/products/update');
             return;
         }
 
-        if (!wp_next_scheduled('vdisain_interfaces/mtac/stock')) {
-            wp_schedule_event(time(), vi()->settings()->mtac['schedule']['stock'], 'vdisain_interfaces/mtac/stock');
-        }
-
-        add_action('vdisain_interfaces/mtac/stock', [vi()->make(StockController::class), 'importAll']);
+        wp_schedule_single_event(time() + 600, 'vdisain_interfaces/mtac/products/destroy');
     }
 }

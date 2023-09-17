@@ -83,8 +83,8 @@ class AdminView extends View
 
         add_submenu_page(
             'vdisain-interfaces-dashboard',
-            __('mtac', 'vdisain-interfaces'),
-            __('mtac', 'vdisain-interfaces'),
+            __('M-Tac', 'seeru-mtac'),
+            __('M-Tac', 'seeru-mtac'),
             'manage_options',
             'seeru-mtac',
             function (): void {

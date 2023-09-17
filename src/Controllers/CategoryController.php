@@ -42,7 +42,7 @@ class CategoryController
         }
 
         if (vi()->isVerbose(2)) {
-            Logger::describe(__CLASS__ . '@' . __LINE__ . ' $categories');
+            Logger::describe(__METHOD__ . '@' . __LINE__ . ' $categories');
             Logger::dump($categories->toArray());
         }
 

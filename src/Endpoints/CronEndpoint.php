@@ -68,7 +68,6 @@ class CronEndpoint extends Endpoint implements EndpointContract
         do_action('wpml_switch_language', vi()->locale());
 
         $this->syncProducts();
-        $this->syncStock();
 
         return new \WP_REST_Response([
             'log' => Logger::array(),
@@ -87,66 +86,61 @@ class CronEndpoint extends Endpoint implements EndpointContract
 
     private function syncProducts(): void
     {
-        if (empty(vi_config('mtac.schedule.products'))) {
+        if (empty(vi_config('mtac.schedule.products.time'))) {
             return;
         }
 
-        $gap = $this->gap(vi_config('mtac.schedule.products'));
+        $time = explode(':', vi_config('mtac.schedule.products.time'));
+        $gap = $this->gap(vi_config('mtac.schedule.products.interval'));
 
-        if (empty($gap)) {
+        if (empty($time) || empty($gap)) {
             Logger::warn('Schedule for product sync not found!');
             return;
         }
+
+        $start = strtotime(
+            sprintf(
+                '%s %s:%s:%s',
+                date('Y-m-d'),
+                str_pad($time[0] ?? '00', 2, '0', STR_PAD_LEFT),
+                str_pad($time[1] ?? '00', 2, '0', STR_PAD_LEFT),
+                str_pad($time[2] ?? '00', 2, '0', STR_PAD_LEFT),
+            )
+        ) - 10800;
+
+        if (abs(time() - $start) < 60) {
+            update_option('vdisain_mtac_schedule_products_next_page', 1);
+            update_option('vdisain_mtac_schedule_products_running', 1);
+        }
+
+        $isRunning = get_option('vdisain_mtac_schedule_products_running');
 
         $next = (int) get_option('vdisain_mtac_schedule_products_last') + $gap;
 
         if (vi()->isVerbose()) {
             Logger::describe(sprintf(
-                'Scheduled product sync: %s (%s)', 
+                'Scheduled product sync: %s, now: %s, gap: %s, started: %s, is running: %s, updating: %s.', 
                 date('Y-m-d H:i:s', $next),
-                $next > time() ? 'skip' : 'execute'
+                date('Y-m-d H:i:s'),
+                $gap,
+                date('Y-m-d H:i:s', $start),
+                empty($isRunning) ? 'no' : 'yes',
+                empty($isRunning) || $next > time() ? 'no' : 'yes'
             ));
         }
 
-        if ($next > time()) {
+        if (empty($isRunning) || $next > time()) {
             return;
         }
 
+        $result = vi()->make(ProductController::class)->import();
         Logger::describe('Product sync at ' . date('Y-m-d H:i:s'));
 
-        vi()->make(ProductController::class)->import();
-    }
-
-    private function syncStock(): void
-    {
-        if (empty(vi_config('mtac.schedule.stock'))) {
-            return;
+        if ($result['processed'] >= $result['total']) {
+            vi()->make(ProductController::class)->destroy();
+            Logger::describe('Product deleted at ' . date('Y-m-d H:i:s'));
+            delete_option('vdisain_mtac_schedule_products_running');
         }
-
-        $gap = $this->gap(vi_config('mtac.schedule.stock'));
-
-        if (empty($gap)) {
-            Logger::warn('Schedule for stock sync not found!');
-            return;
-        }
-
-        $next = (int) get_option('vdisain_mtac_schedule_stock_last') + $gap;
-
-        if (vi()->isVerbose()) {
-            Logger::describe(sprintf(
-                'Scheduled stock sync: %s (%s)', 
-                date('Y-m-d H:i:s', $next),
-                $next > time() ? 'skip' : 'execute'
-            ));
-        }
-
-        if ($next > time()) {
-            return;
-        }
-
-        Logger::describe('Stock sync at ' . date('Y-m-d H:i:s'));
-
-        vi()->make(StockController::class)->importAll();
     }
 
     private function gap(string $key): ?int

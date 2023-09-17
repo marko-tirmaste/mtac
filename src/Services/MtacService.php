@@ -41,7 +41,7 @@ class MtacService
         ]);
     }
 
-    const CACHE_EXPIRE_TIME = 900;
+    const CACHE_EXPIRE_TIME = 3600;
 
     protected Client $client;
     protected Settings $settings;

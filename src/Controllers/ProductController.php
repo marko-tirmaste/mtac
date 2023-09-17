@@ -11,6 +11,7 @@ namespace Seeru\Mtac\Controllers;
 defined('VDAI_PATH') or die;
 
 use Seeru\Mtac\Mappers\ProductMapper;
+use Vdisain\Plugins\Interfaces\Support\Log\Log;
 use Seeru\Mtac\Services\ProductService;
 use Vdisain\Plugins\Interfaces\Exceptions\NotFoundException;
 use Vdisain\Plugins\Interfaces\Repositories\ProductRepository;
@@ -18,10 +19,6 @@ use Vdisain\Plugins\Interfaces\Support\Collection;
 use Vdisain\Plugins\Interfaces\Support\Logger;
 
 set_time_limit(0);
-
-ini_set('xdebug.var_display_max_depth', '-1');
-ini_set('xdebug.var_display_max_children', '-1');
-ini_set('xdebug.var_display_max_data', '-1');
 
 /**
  * Controller class for handling actions with M-Tac products
@@ -32,6 +29,24 @@ ini_set('xdebug.var_display_max_data', '-1');
 class ProductController
 {
     /**
+     * Initializes the controller instance
+     * 
+     * @param \Vdisain\Plugins\Interfaces\Repositories\ProductRepository $repo WooCommerce product repository
+     * @param \Seeru\Mtac\Services\ProductService $service M-Tac product service
+     */
+    public function __construct(
+        protected ProductRepository $repo,
+        protected ProductService $service,
+    ) {
+        //
+    }
+
+    public function destory(): void
+    {
+        Log::info('Product destroy executed');
+    }
+    
+    /**
      * Imports products from mtac
      * 
      * @return array<int>
@@ -39,20 +54,22 @@ class ProductController
     public function import(): array
     {
         $now = time();
-        $products = $this->groupVariations((new ProductService())->get());
+        $start = microtime(true);
+
+        $products = $this->service->get();
 
         $page = isset($_GET['page']) 
             ? max((int) $_GET['page'], 1)
             : (int) get_option('vdisain_mtac_schedule_products_next_page', 1);
 
-        $perPage = isset($_GET['per_page']) ? (int) $_GET['per_page'] : 1;
+        $perPage = isset($_GET['per_page']) ? (int) $_GET['per_page'] : 10;
 
         if (vi()->isVerbose()) {
             Logger::describe('Updating products.');
             Logger::describe(sprintf('Page %s, per page %s, total %s.', $page, $perPage, $products->count()));
         }
 
-        $this->processImport($products, $perPage, $page);
+        $this->processImport($this->groupVariations($products), $perPage, $page);
 
         update_option('vdisain_mtac_schedule_products_last', $now);
         update_option('vdisain_mtac_schedule_products_next_page', $page * $perPage > $products->count() ? 1 : $page + 1);
@@ -60,6 +77,9 @@ class ProductController
         return [
             'processed' => min($page * $perPage, $products->count()),
             'total' => $products->count(),
+            'page' => $page,
+            'per_page' => $perPage,
+            'time' => round(microtime(true) - $start, 3),
         ];
     }
 
@@ -71,7 +91,7 @@ class ProductController
     public function importAll(): array
     {
         $now = time();
-        $products = $this->groupVariations((new ProductService())->get());
+        $products = $this->groupVariations($this->service->get());
 
         $this->processImport($products);
 
@@ -97,7 +117,7 @@ class ProductController
 
         $data = vi()->make(ProductService::class)->find($id);
 
-        if (vi()->isVerbose()) {
+        if (vi()->isVerbose(3)) {
             Logger::describe('ProductController::importProduct() $data');
             Logger::dump($data);
         }
@@ -129,9 +149,29 @@ class ProductController
 
     protected function groupVariations(Collection $products): Collection
     {
-        return $products->groupBy(function (array $product): string {
-            return $this->titleWithoutAttributes($product);
-        });
+        return $products
+            ->filter(function (array $product): bool {
+                // Filter out simple and variable products
+                return empty($product['item_group_id']) || $product['item_group_id'] === $product['id'];
+            })
+            ->map(function (array $product) use ($products): array {
+                if (!empty($product['item_group_id'])) {
+                    // Add variations to variable product
+                    $product['variations'] = $products
+                        ->filter(function (array $variation) use ($product): bool {
+                            return !empty($variation['item_group_id']) && $variation['item_group_id'] === $product['item_group_id'];
+                        })
+                        ->map(function (array $variation): array {
+                            if (isset($variation['status'])) {
+                                $variation['status'] = $variation['status'] !== 'trash' ? 'publish' : $variation['status'];
+                            }
+                            return $variation;
+                        });
+                    $product['gtin'] = null;
+                }
+
+                return $product;
+            });
     }
 
     /**
@@ -147,48 +187,59 @@ class ProductController
             $page = 1;
         }
 
-        //file_put_contents(__DIR__ . '/dump.json', json_encode($products, JSON_PRETTY_PRINT));
+        $from = !empty($perPage) ? ($page - 1) * $perPage : 0;
+        $to = !empty($perPage) ? $from + $perPage : PHP_INT_MAX;
+        $index = 0;
 
-        if (empty($perPage)) {
-            $products->each(function (Collection $data): void {
-                $this->processProductImport($data);
-            });
+        $products->each(function (array $data) use (&$index, $from, $to) {
+            if ($index >= $to) {
+                return false;
+            }
 
-            return;
-        }
+            if ($index >= $from) {
+                $parentId = $this->processProductImport($data);
+            }
 
-        // Paginated, process only specified page
-        $products = $products->chunk($perPage)
-            ->filter(function (Collection $products, int $index) use ($page): bool {
-                return $index + 1 === $page;
-            })
-            ->each(function (Collection $products): void {
-                $products->each(function (Collection $data): void {
-                    $this->processProductImport($data);
-                });
-            });
+            $index++;
+
+            if (!empty($data['variations'])) {
+                foreach ($data['variations'] as $variation) {
+                    if ($index >= $to) {
+                        return false;
+                    }
+
+                    if ($index >= $from) {
+                        if (empty($parentId)) {
+                            $parentId = $this->processProductImport($data);
+                        }
+
+                        $variation['parent_id'] = $parentId;
+
+                        $this->processProductImport($variation);
+                    }
+
+                    $index++;
+                }
+            }
+        });
     }
 
-    private function processProductImport(Collection $data): void
+    private function processProductImport(array $data): ?int
     {
         try {
-            $product = $data->first();
-            if ($data->count() > 1) {
-                $product['title'] = $this->titleWithoutAttributes($product);
-                $product['gtin'] = null;
-                $product['variations'] = $data;
-            }
-            $map = (new ProductMapper($product))->toArray();
+            $map = (new ProductMapper($data))->toArray();
 
             if (vi()->isVerbose()) {
-                Logger::describe('ProductController::processProductImport() $map');
+                Logger::describe(__METHOD__ . '@' .  __LINE__ . ' $map');
                 Logger::dump($map);
             }
 
-            vi()->make(ProductRepository::class)->updateOrCreate($map);
+            return $this->repo->updateOrCreate($map);
         } catch (\Throwable $error) {
             Logger::warn($error->getMessage() . ' ' . $error->getFile() . ' ' . $error->getLine());
         }
+
+        return null;
     }
 
     protected function titleWithoutAttributes(array $product): string

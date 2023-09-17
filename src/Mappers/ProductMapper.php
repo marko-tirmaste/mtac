@@ -40,7 +40,6 @@ class ProductMapper extends Mapper implements MapperContract
         $map = [
             'id' => $this->mapId($data),
             'parent_id' => null,
-            'status' => 'publish',
             //'sku' => $data['gtin'] ?? null,
             'type' => $this->mapType($data),
             //'quantity' => $data['quantity'] ?? 0,
@@ -55,15 +54,23 @@ class ProductMapper extends Mapper implements MapperContract
 
         $isNew = empty($map['id']);
 
+        if ($isNew) {
+            $map['status'] = empty($data['parent_id']) && !empty(vi_config('mtac.new_status')) ? vi_config('mtac.new_status') : 'publish';
+        }
+
         if (!empty($data['gtin'])) {
             $map['meta']['_sku'] = $data['gtin'];
         }
 
-        if (!empty($data['variations'])) {
+        if (!empty($data['parent_id'])) {
+            $map['parent_id'] = $data['parent_id'];
+        }
+
+        /* if (!empty($data['variations'])) {
             $map['variations'] = $data['variations']->map(function (array $variation): ProductMapper {
                 return new ProductMapper($variation);
             });
-        }
+        } */
 
         if ($this->isMapping('name', $isNew)) {
             $map['name'] = [
@@ -72,7 +79,7 @@ class ProductMapper extends Mapper implements MapperContract
         }
 
         if ($this->isMapping('description', $isNew)) {
-            $map['description'] = $data['description'] ?? null;
+            $map['description'] = ['et' => $data['description'] ?? null];
         }
 
         if ($this->isMapping('price', $isNew)) {
@@ -218,7 +225,8 @@ class ProductMapper extends Mapper implements MapperContract
             ])
         )->first();
 
-        $id = !empty($product->post_parent) ? $product->post_parent : ($product->ID ?? null);
+        //$id = !empty($product->post_parent) ? $product->post_parent : ($product->ID ?? null);
+        $id = !empty($data['variations']) ? ($product->post_parent ?? null) : ($product->ID ?? null);
 
         if (vi()->isVerbose()) {
             Logger::describe(sprintf('ID: %s', $id ?? 'not found'));
@@ -242,14 +250,24 @@ class ProductMapper extends Mapper implements MapperContract
 
         $price = (float) $data['price'];
 
+        if (vi()->isVerbose()) {
+            Logger::describe(sprintf('Price: %s €', $price));
+        }
+
         $markup = vi_config('mtac.markup');
         if (!empty($markup)) {
             $price += ($price / 100) * $markup;
+            if (vi()->isVerbose()) {
+                Logger::describe(sprintf('+ markup: %s €', ($price / 100) * $markup));
+            }
         }
 
         $vat = vi_config('mtac.vat');
         if (!empty($vat)) {
             $price += ($price / 100) * $vat;
+            if (vi()->isVerbose()) {
+                Logger::describe(sprintf('+ VAT: %s €', ($price / 100) * $vat));
+            }
         }
 
         return $price;
@@ -263,7 +281,7 @@ class ProductMapper extends Mapper implements MapperContract
      * @return string
      */
     private function mapType(array $data): string
-    {   
+    {
         return !empty($data['variations']) ? ProductRepository::TYPE_VARIABLE : ProductRepository::TYPE_SIMPLE;
     }
 }
