@@ -109,7 +109,7 @@ class CronEndpoint extends Endpoint implements EndpointContract
             )
         ) - 10800;
 
-        if (abs(time() - $start) < 60) {
+        if (abs(time() - $start) < 180) {
             update_option('vdisain_mtac_schedule_products_next_page', 1);
             update_option('vdisain_mtac_schedule_products_running', 1);
         }
