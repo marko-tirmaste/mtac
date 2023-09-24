@@ -64,7 +64,7 @@ defined('ABSPATH') or die;
         </vd-select>
 
         <vd-field name="vdai_mtac_options[schedule][products][time]" value="<?= vi_config('mtac.schedule.products.time') ?>">
-            <?= __('Products cron start', 'seeru-mtac') ?>
+            <?= __('Products cron start (server time)', 'seeru-mtac') ?>
         </vd-field>
 
         <vd-select

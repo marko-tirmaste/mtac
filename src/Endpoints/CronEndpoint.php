@@ -86,8 +86,6 @@ class CronEndpoint extends Endpoint implements EndpointContract
 
     private function syncProducts(): void
     {
-        Log::info('Sync products cron called.');
-
         if (empty(vi_config('mtac.schedule.products.time'))) {
             return;
         }
@@ -144,7 +142,6 @@ class CronEndpoint extends Endpoint implements EndpointContract
         if ($result['processed'] >= $result['total']) {
             Log::info('Product update completed.');
             vi()->make(ProductController::class)->destroy();
-            Logger::describe('Product deleted at ' . date('Y-m-d H:i:s'));
             delete_option('vdisain_mtac_schedule_products_running');
         }
     }
