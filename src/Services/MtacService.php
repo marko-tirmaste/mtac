@@ -49,8 +49,8 @@ class MtacService
 
     protected function isCached(): bool
     {
-        return file_exists(VDAI_PATH_CACHE_MTAC . '/products.xml')
-            && filemtime(VDAI_PATH_CACHE_MTAC . '/products.xml') + static::CACHE_EXPIRE_TIME > time();
+        return file_exists(VDAI_PATH_CACHE_MTAC . '/products.json')
+            && filemtime(VDAI_PATH_CACHE_MTAC . '/products.json') + static::CACHE_EXPIRE_TIME > time();
     }
 
     protected function readCache(): array

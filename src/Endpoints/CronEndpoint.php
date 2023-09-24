@@ -11,7 +11,6 @@
 namespace Seeru\Mtac\Endpoints;
 
 use Seeru\Mtac\Controllers\ProductController;
-use Seeru\Mtac\Controllers\StockController;
 use Vdisain\Plugins\Interfaces\Support\Logger;
 use Vdisain\Plugins\Interfaces\Support\Rest\Endpoint;
 use Vdisain\Plugins\Interfaces\Support\Contracts\Rest\EndpointContract;
@@ -87,6 +86,8 @@ class CronEndpoint extends Endpoint implements EndpointContract
 
     private function syncProducts(): void
     {
+        Log::info('Sync products cron called.');
+
         if (empty(vi_config('mtac.schedule.products.time'))) {
             return;
         }
@@ -107,9 +108,10 @@ class CronEndpoint extends Endpoint implements EndpointContract
                 str_pad($time[1] ?? '00', 2, '0', STR_PAD_LEFT),
                 str_pad($time[2] ?? '00', 2, '0', STR_PAD_LEFT),
             )
-        ) - 10800;
+        ) /* - 10800 */;
 
-        if (abs(time() - $start) < 180) {
+        if (abs(time() - $start) < $gap / 2 || isset($_GET['start'])) {
+            Log::info('Product update started.');
             update_option('vdisain_mtac_schedule_products_next_page', 1);
             update_option('vdisain_mtac_schedule_products_running', 1);
         }
@@ -140,15 +142,16 @@ class CronEndpoint extends Endpoint implements EndpointContract
         Log::info('Product update executed', $result);
 
         if ($result['processed'] >= $result['total']) {
+            Log::info('Product update completed.');
             vi()->make(ProductController::class)->destroy();
             Logger::describe('Product deleted at ' . date('Y-m-d H:i:s'));
             delete_option('vdisain_mtac_schedule_products_running');
         }
     }
 
-    private function gap(string $key): ?int
+    private function gap(string $key): int
     {
         $schedule = apply_filters('cron_schedules', []);
-        return !empty($schedule[$key]) ? $schedule[$key]['interval'] : null;
+        return !empty($schedule[$key]) ? $schedule[$key]['interval'] : 0;
     }
 }

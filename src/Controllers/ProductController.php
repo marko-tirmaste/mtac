@@ -41,9 +41,40 @@ class ProductController
         //
     }
 
-    public function destory(): void
+    /**
+     * Removes products removed by M-Tac
+     * 
+     * @return array
+     */
+    public function destroy(): array
     {
-        Log::info('Product destroy executed');
+        $mtacIds = $this->service->get()->pluck('id');
+        $products = $this->getAllProducts()
+            ->filter(function (object $product) use ($mtacIds): bool {
+                return !$mtacIds->contains($product->mtac_id);
+            });
+
+        if ($products->isEmpty()) {
+            Logger::describe('No products to remove.');
+            Log::info('No products to remove.');
+            return [];
+        }
+
+        $products->each(function (object $product): void {
+            $p = wc_get_product($product->product_id);
+            if (empty($p)) {
+                return;
+            }
+            $p->set_status('trash');
+            $p->save();
+            Logger::describe(sprintf('Removed %s.', $p->get_title()));
+        });
+
+        Log::info('Removed products', [$products->all()]);
+
+        return [
+            'removed' => $products->all(),
+        ];
     }
     
     /**
@@ -62,7 +93,7 @@ class ProductController
             ? max((int) $_GET['page'], 1)
             : (int) get_option('vdisain_mtac_schedule_products_next_page', 1);
 
-        $perPage = isset($_GET['per_page']) ? (int) $_GET['per_page'] : 10;
+        $perPage = isset($_GET['per_page']) ? (int) $_GET['per_page'] : 100;
 
         if (vi()->isVerbose()) {
             Logger::describe('Updating products.');
@@ -249,6 +280,28 @@ class ProductController
                 trim(($product['color'] ?? '') . ' ' . ($product['size'] ?? '')),
                 '',
                 is_array($product['title']) ? array_shift($product['title']) ?? '' : $product['title']
+            )
+        );
+    }
+
+
+    protected function getAllProducts(): Collection
+    {
+        /** @global \wpdb $wpdb */
+        global $wpdb;
+
+        return vi_collect(
+            $wpdb->get_results(
+                "SELECT 
+                    `posts`.`post_title` AS `title`, `postmeta`.`post_id` AS `product_id`, `postmeta`.`meta_value` AS `mtac_id`
+                FROM 
+                    `{$wpdb->postmeta}` AS `postmeta`
+                    LEFT JOIN `{$wpdb->posts}` AS `posts` ON `postmeta`.`post_id` = `posts`.`ID`  
+                WHERE 
+                    `postmeta`.`meta_key` = '_mtac_id'
+                    AND `posts`.`post_status` = 'publish'
+                GROUP BY 
+                    `postmeta`.`post_id`;",
             )
         );
     }
