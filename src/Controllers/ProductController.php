@@ -17,6 +17,8 @@ use Vdisain\Plugins\Interfaces\Exceptions\NotFoundException;
 use Vdisain\Plugins\Interfaces\Repositories\ProductRepository;
 use Vdisain\Plugins\Interfaces\Support\Collection;
 use Vdisain\Plugins\Interfaces\Support\Logger;
+use WP_REST_Request;
+use WP_REST_Response;
 
 set_time_limit(0);
 
@@ -40,6 +42,13 @@ class ProductController
     ) {
         //
     }
+
+    // public function show() 
+    // {
+    //     return new \WP_REST_Response([
+    //         'message' => 'Hello world!',
+    //     ]);
+    // }
 
     /**
      * Removes products removed by M-Tac
@@ -112,6 +121,91 @@ class ProductController
             'per_page' => $perPage,
             'time' => round(microtime(true) - $start, 3),
         ];
+    }
+
+    /**
+     * Updates the M-Tac products
+     * 
+     * @param \WP_REST_Request $request The request object
+     * 
+     * @return \WP_REST_Response
+     */
+    public function update(WP_REST_Request $request): WP_REST_Response
+    {
+        $now = time();
+        $start = microtime(true);
+
+        $filter = $this->getFilter($request);
+
+        $page = $request->has_param('page') 
+            ? max((int) $request->get_param(1), 1) 
+            : ($this->filterIsEmpty($filter) ? (int) get_option('vdisain_mtac_schedule_products_next_page', 1) : 1);
+        $perPage = $request->has_param('per_page') ? (int) $request->get_param('per_page') : 100;
+
+        $products = $this->filterProducts(
+            $this->groupVariations($this->service->get()), 
+            $filter
+        );
+
+        $total = $this->countProducts($products);
+
+        $this->processImport($products, $perPage, $page);
+
+        if ($this->filterIsEmpty($filter)) {
+            update_option('vdisain_mtac_schedule_products_last', $now);
+            update_option('vdisain_mtac_schedule_products_next_page', $page * $perPage > $total ? 1 : $page + 1);
+        }
+
+        return new WP_REST_Response([
+            ...array_filter($filter),
+            'processed' => min($page * $perPage, $total ?? 0),
+            'total' => $total ?? 0,
+            'time' => round(microtime(true) - $start, 3),
+            'log' => Logger::array(),
+        ]);
+    }
+
+    protected function getFilter(WP_REST_Request $request): array
+    {
+        return [
+            'mtac_id' => array_filter(explode(',', $request->get_param('mtac_id') ??  '')),
+            'sku' => array_filter(explode(',', $request->get_param('sku') ?? '')),
+        ];
+    }
+
+    protected function filterIsEmpty(array $filter): bool
+    {
+        return empty($filter['mtac_id']) && empty($filter['sku']);
+    }
+
+    protected function filterProducts(Collection $products, array $filter): Collection
+    {
+        if (!empty($filter['mtac_id'])) {
+            $products = $this->filterProductsByField($products, 'id', $filter['mtac_id']);
+        }
+
+        if (!empty($filter['sku'])) {
+            $products = $this->filterProductsByField($products, 'gtin', $filter['sku']);
+        }
+
+        return $products;
+    }
+
+    protected function filterProductsByField(Collection $products, string $key, array $value): Collection
+    {
+        return $products
+            ->filter(function (array $product) use ($key, $value): bool {
+                return in_array($product[$key], $value)
+                    || !empty($product['variations']) && $product['variations']->contains(fn(array $variation): bool => in_array($variation[$key], $value));
+            })
+            ->values();
+    }
+
+    protected function countProducts(Collection $products): int
+    {
+        return $products->sum(function (array $product): int {
+            return 1 + (!empty($product['variations']) ? $product['variations']->count() : 0);
+        });
     }
 
     /**

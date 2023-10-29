@@ -20,10 +20,7 @@ defined('ABSPATH') or die;
             <?= __('XML Feed', 'vdisain-interfaces') ?>
         </h3>
 
-        <vd-field 
-            name="vdai_mtac_options[xml_url]"
-            value="<?= vi_config('mtac.xml_url') ?>" 
-        >
+        <vd-field name="vdai_mtac_options[xml_url]" value="<?= vi_config('mtac.xml_url') ?>" >
             <?= __('XML Feed Url', 'seeru-mtac') ?>
         </vd-field>
     </div>
@@ -85,7 +82,19 @@ defined('ABSPATH') or die;
         <vi-dialog>
             <template #trigger><?= __('Import products', 'seeru-mtac') ?></template>
             <template #header><?= __('Product importing', 'seeru-mtac') ?></template>
-            <vi-product-sync service="mtac"></vi-product-sync>
+            <vi-product-sync 
+                service="mtac"
+                :fields="<?= htmlentities(
+                    json_encode(
+                        [
+                            ['label' => __('M-Tac ID', 'vdisain-mtac'), 'name' => 'mtac_id', 'type' => 'text', 'hint' => __('Coma separated list of M-Tac product ID-s.', 'vdisain-mtac')],
+                            ['label' => __('M-Tac SKU', 'vdisain-mtac'), 'name' => 'sku', 'type' => 'text', 'hint' => __('Coma separated list of M-Tac product SKU-s (GTIN/UPC).', 'vdisain-mtac')],
+                        ], 
+                        JSON_HEX_QUOT
+                    ), 
+                    ENT_QUOTES
+                ) ?>"
+            />
         </vi-dialog>
 
         <hr class="w-full h-px my-4 bg-gray-200 border-0">

@@ -77,7 +77,7 @@ class AdminView extends View
      */
     public static function register(): void
     {
-        if (empty(vi()->settings()->common['module']['mtac'])) {
+        if (empty(vi_config('common.module.mtac'))) {
             return;
         }
 

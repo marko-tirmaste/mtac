@@ -11,7 +11,6 @@ namespace Seeru\Mtac\Services;
 defined('VDAI_PATH') or die;
 
 use GuzzleHttp\Client;
-use Vdisain\Plugins\Interfaces\Models\Settings;
 use Vdisain\Plugins\Interfaces\Exceptions\MissingSettingsException;
 
 /**
@@ -24,9 +23,7 @@ class MtacService
 {    
     public function __construct()
     {
-        $this->settings = vi()->settings();
-
-        $this->xmlFeedUrl = $this->settings->mtac['xml_url'];
+        $this->xmlFeedUrl = vi_config('mtac.xml_url');
         if (empty($this->xmlFeedUrl)) {
             throw new MissingSettingsException();
         }
@@ -44,7 +41,6 @@ class MtacService
     const CACHE_EXPIRE_TIME = 3600;
 
     protected Client $client;
-    protected Settings $settings;
     protected string $xmlFeedUrl;
 
     protected function isCached(): bool
