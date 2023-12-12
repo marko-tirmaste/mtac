@@ -75,7 +75,8 @@ class ProductCompareController
         }
 
         return new WP_REST_Response([
-            ...$map,
+            'products' => $map,
+            'total' => $map->count(),
         ]);
     }
 }
