@@ -17,7 +17,6 @@ return [
 
         // Stock levels
         \Seeru\Mtac\Endpoints\Stock\ImportEndpoint::class,
-        \Seeru\Mtac\Endpoints\Stock\ImportSingleEndpoint::class,
         \Seeru\Mtac\Endpoints\Stock\UpdateSingleEndpoint::class,
 
         // Cron

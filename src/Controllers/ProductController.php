@@ -124,6 +124,35 @@ class ProductController
     }
 
     /**
+     * Adds single M-Tac product to WooCommerce
+     * 
+     * @param \WP_REST_Request $request The request object
+     * 
+     * @return \WP_REST_Response
+     */
+    public function store(WP_REST_Request $request): WP_REST_Response
+    {
+        /** @var \Seeru\Mtac\Services\ProductService $service */
+        $service = vi()->make(ProductService::class);
+
+        $product = $service->findOrFail($request->get_param('id'));
+
+        if (!empty($product['item_group_id'])) {
+            $product = $service->findOrFail($product['item_group_id']);
+            $product['variations'] = $service->get()
+                ->filter(fn(array $variation): bool => !empty($variation['item_group_id']) && $variation['item_group_id'] === $product['id'])
+                ->values();
+        }
+
+        $this->processImport(vi_collect([$product]));
+
+        return new WP_REST_Response([
+            'product' => $product,
+            'logs' => Logger::array(),
+        ]);
+    }
+
+    /**
      * Updates the M-Tac products
      * 
      * @param \WP_REST_Request $request The request object

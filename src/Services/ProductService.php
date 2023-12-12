@@ -7,6 +7,7 @@
  * @since 1.0.0 2023-05-09
  */
 namespace Seeru\Mtac\Services;
+use Vdisain\Plugins\Interfaces\Support\Exceptions\Container\NotFoundException;
 
 defined('VDAI_PATH') or die;
 
@@ -75,5 +76,16 @@ class ProductService extends MtacService
                 return (int) $item['id'] === $id;
             })
             ->first();
+    }
+
+    public function findOrFail(int $id): array
+    {
+        $product = $this->find($id);
+
+        if (empty($product)) {
+            throw new NotFoundException();
+        }
+
+        return $product;
     }
 }
