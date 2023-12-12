@@ -97,7 +97,10 @@ class ProductMapper extends Mapper implements MapperContract
         if ($this->isMapping('images', $isNew) && !empty($data['image_link'])) {
             $map['images'] = [
                 $data['image_link'],
-                ...($data['additional_image_link'] ?? []),
+                ...(empty($data['additional_image_link']) 
+                    ? [] 
+                    : (is_string($data['additional_image_link']) ? [$data['additional_image_link']] : $data['additional_image_link'])
+                ),
             ];
         }
 
