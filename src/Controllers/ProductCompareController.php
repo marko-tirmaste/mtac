@@ -44,11 +44,11 @@ class ProductCompareController
 
         $map = $this->mtacProducts->map(function (array $mtacProduct): array {
             $wooProduct = $this->wooProducts
-                ->filter(fn(object $wooProduct): bool => (string) $wooProduct->mtac_id === (string) $mtacProduct['id'])
+                ->filter(fn(object $product): bool => (string) $product->mtac_id === (string) $mtacProduct['id'])
                 ->first();
 
             $parentMtacProduct = $this->mtacProducts
-                ->filter(fn(array $mtacProduct): bool => (string) $mtacProduct['id'] === (string) $mtacProduct['item_group_id'])
+                ->filter(fn(array $product): bool => (string) $product['id'] === (string) $mtacProduct['item_group_id'])
                 ->first();
 
             return [
