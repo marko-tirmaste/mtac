@@ -10,6 +10,7 @@
 declare(strict_types=1);
 
 namespace Seeru\Mtac\Controllers;
+use Vdisain\Plugins\Interfaces\Support\Collection;
 
 defined('VDAI_PATH') or die;
 
@@ -33,22 +34,32 @@ class ProductCompareController
         //
     }
 
+    protected Collection $wooProducts;
+    protected Collection $mtacProducts;
+
     public function index(WP_REST_Request $request): WP_REST_Response
     {
-        $wooProducts = $this->productRepository->allMtacProducts();
-        $mtacProducts = $this->productService->get();
+        $this->wooProducts = $this->productRepository->allMtacProducts();
+        $this->mtacProducts = $this->productService->get();
 
-        $map = $mtacProducts->map(function (array $mtacProduct) use ($wooProducts): array {
-            $wooProduct = $wooProducts
+        $map = $this->mtacProducts->map(function (array $mtacProduct): array {
+            $wooProduct = $this->wooProducts
                 ->filter(fn(object $wooProduct): bool => (string) $wooProduct->mtac_id === (string) $mtacProduct['id'])
+                ->first();
+
+            $parentMtacProduct = $this->mtacProducts
+                ->filter(fn(array $mtacProduct): bool => (string) $mtacProduct['id'] === (string) $mtacProduct['item_group_id'])
                 ->first();
 
             return [
                 'id' => $wooProduct->id ?? null,
                 'mtac_id' => $mtacProduct['id'],
-                'type' => $wooProduct->type ?? (!empty($mtacProduct['item_group_id']) ? 'Variation' : 'Simple/Variable'),
-                'parent_id' => $wooProduct->parent_id ?? null,
-                'parent_mtac_id' => $mtacProduct['item_group_id'] ?? null,
+                // 'type' => $wooProduct->type ?? (!empty($mtacProduct['item_group_id']) ? 'Variation' : 'Simple/Variable'),
+                ...(!empty($mtacProduct['item_group_id']) ? ['parent' => [
+                    'id' => $wooProduct->parent_id ?? null,
+                    'mtac_id' => $mtacProduct['item_group_id'] ?? null,
+                    'title' => $parentMtacProduct['title'] ?? 'Not found',
+                ]] : []),
                 'title' => $wooProduct->title ?? $mtacProduct['title'],
                 'status' => $wooProduct->status ?? null,
                 '_links' => [
@@ -58,14 +69,13 @@ class ProductCompareController
             ];
         });
 
-        $wooProducts->each(function (object $wooProduct) use ($map): void {
+        $this->wooProducts->each(function (object $wooProduct) use ($map): void {
             if ($map->where('id', $wooProduct->id)->isEmpty()) {
                 $map->push([
                     'id' => $wooProduct->id,
                     'sku' => $wooProduct->mtac_id,
-                    'type' => $wooProduct->type,
-                    'parent_id' => $wooProduct->parent_id,
-                    'parent_mtac_id' => null,
+                    // 'type' => $wooProduct->type,
+                    // 'parent_id' => $wooProduct->parent_id,
                     'title' => $wooProduct->title,
                     'status' => $wooProduct->status,
                     '_links' => [
