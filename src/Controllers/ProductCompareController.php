@@ -46,6 +46,9 @@ class ProductCompareController
             return [
                 'id' => $wooProduct->id ?? null,
                 'mtac_id' => $mtacProduct['id'],
+                'type' => $wooProduct->type ?? (!empty($mtacProduct['item_group_id']) ? 'Variation' : 'Simple/Variable'),
+                'parent_id' => $wooProduct->parent_id ?? null,
+                'parent_mtac_id' => $mtacProduct['item_group_id'] ?? null,
                 'title' => $wooProduct->title ?? $mtacProduct['title'],
                 'status' => $wooProduct->status ?? null,
                 '_links' => [
@@ -60,6 +63,9 @@ class ProductCompareController
                 $map->push([
                     'id' => $wooProduct->id,
                     'sku' => $wooProduct->mtac_id,
+                    'type' => $wooProduct->type,
+                    'parent_id' => $wooProduct->parent_id,
+                    'parent_mtac_id' => null,
                     'title' => $wooProduct->title,
                     'status' => $wooProduct->status,
                     '_links' => [

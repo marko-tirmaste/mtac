@@ -38,7 +38,9 @@ class ProductRepository extends BaseProductRepository
                     `{$wpdb->postmeta}`.`post_id` AS `id`,
                     `{$wpdb->postmeta}`.`meta_value` AS `mtac_id`,
                     `{$wpdb->posts}`.`post_title` AS `title`,
-                    `{$wpdb->posts}`.`post_status` AS `status`
+                    `{$wpdb->posts}`.`post_status` AS `status`,
+                    `{$wpdb->posts}`.`post_type` AS `type`,
+                    `{$wpdb->posts}`.`post_parent` AS `parent_id`
                 FROM 
                     `{$wpdb->postmeta}` 
                     LEFT JOIN `{$wpdb->posts}` ON `{$wpdb->postmeta}`.`post_id` = `{$wpdb->posts}`.`ID`
