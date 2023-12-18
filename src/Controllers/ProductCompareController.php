@@ -47,9 +47,11 @@ class ProductCompareController
                 ->filter(fn(object $product): bool => (string) $product->mtac_id === (string) $mtacProduct['id'])
                 ->first();
 
-            $parentMtacProduct = $this->mtacProducts
-                ->filter(fn(array $product): bool => (string) $product['id'] === (string) $mtacProduct['item_group_id'])
-                ->first();
+            $parentMtacProduct = !empty($mtacProduct['item_group_id']) 
+                ? $this->mtacProducts
+                    ->filter(fn(array $product): bool => (string) $product['id'] === (string) $mtacProduct['item_group_id'])
+                    ->first()
+                : null;
 
             return [
                 'id' => $wooProduct->id ?? null,

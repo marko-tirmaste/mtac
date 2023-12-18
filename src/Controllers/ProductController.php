@@ -43,12 +43,24 @@ class ProductController
         //
     }
 
-    // public function show() 
-    // {
-    //     return new \WP_REST_Response([
-    //         'message' => 'Hello world!',
-    //     ]);
-    // }
+    public function show(WP_REST_Request $request): WP_REST_Response
+    {
+        $id = (string) $request->get_param('id');
+
+        $product = $this->groupVariations($this->service->get())
+            ->filter(
+                fn(array $p): bool => (string) $p['id'] === $id || (!empty($p['variations']) && $p['variations']->contains('id', $id))
+            )
+            ->first();
+
+        if (empty($product)) {
+            throw new NotFoundException();
+        }
+
+        return new WP_REST_Response([
+            'product' => $product,
+        ]);
+    }
 
     /**
      * Removes products removed by M-Tac
@@ -121,6 +133,13 @@ class ProductController
             'per_page' => $perPage,
             'time' => round(microtime(true) - $start, 3),
         ];
+    }
+
+    public function index(WP_REST_Request $request): WP_REST_Response
+    {
+        return new WP_REST_Response([
+            'products' => $this->groupVariations($this->service->get()),
+        ]);
     }
 
     /**
@@ -320,12 +339,15 @@ class ProductController
                                 $variation['status'] = $variation['status'] !== 'trash' ? 'publish' : $variation['status'];
                             }
                             return $variation;
-                        });
+                        })
+                        ->values();
+
                     $product['gtin'] = null;
                 }
 
                 return $product;
-            });
+            })
+            ->values();
     }
 
     /**
@@ -347,11 +369,21 @@ class ProductController
 
         $products->each(function (array $data) use (&$index, $from, $to) {
             if ($index >= $to) {
+                if ((string) $data['id'] === '9576') {
+                    file_put_contents(__DIR__ . '/dump.log', 'Page end' . PHP_EOL, FILE_APPEND);
+                }
                 return false;
+            }
+
+            if ((string) $data['id'] === '9576') {
+                file_put_contents(__DIR__ . '/dump.log', json_encode($data, JSON_PRETTY_PRINT) . PHP_EOL . PHP_EOL);
             }
 
             if ($index >= $from) {
                 $parentId = $this->processProductImport($data);
+                if ((string) $data['id'] === '9576') {
+                    file_put_contents(__DIR__ . '/dump.log', 'Parent ID: ' . $parentId . PHP_EOL, FILE_APPEND);
+                }
             }
 
             $index++;
@@ -359,17 +391,26 @@ class ProductController
             if (!empty($data['variations'])) {
                 foreach ($data['variations'] as $variation) {
                     if ($index >= $to) {
+                        if ((string) $data['id'] === '9576') {
+                            file_put_contents(__DIR__ . '/dump.log', 'Page end' . PHP_EOL, FILE_APPEND);
+                        }
                         return false;
                     }
 
                     if ($index >= $from) {
                         if (empty($parentId)) {
                             $parentId = $this->processProductImport($data);
+                            if ((string) $data['id'] === '9576') {
+                                file_put_contents(__DIR__ . '/dump.log', 'Parent ID: ' . $parentId . PHP_EOL, FILE_APPEND);
+                            }
                         }
 
                         $variation['parent_id'] = $parentId;
 
                         $this->processProductImport($variation);
+                        if ((string) $data['id'] === '9576') {
+                            file_put_contents(__DIR__ . '/dump.log', 'Variation processed' . PHP_EOL, FILE_APPEND);
+                        }
                     }
 
                     $index++;
