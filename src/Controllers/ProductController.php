@@ -385,11 +385,11 @@ class ProductController
                     file_put_contents(__DIR__ . '/dump.log', 'Parent ID: ' . $parentId . PHP_EOL, FILE_APPEND);
                 }
 
-                file_put_contents(
-                    __DIR__ . '/dump2.log', 
-                    sprintf('[%s][%s >> %s] %s : %s', date('Y-m-d H:i:s'), str_pad("$from", 5), str_pad("$to", 5), str_pad("$index", 5), $data['id']) . PHP_EOL, 
-                    FILE_APPEND
-                );
+                // file_put_contents(
+                //     __DIR__ . '/dump2.log', 
+                //     sprintf('[%s][%s >> %s] %s : %s', date('Y-m-d H:i:s'), str_pad("$from", 5), str_pad("$to", 5), str_pad("$index", 5), $data['id']) . PHP_EOL, 
+                //     FILE_APPEND
+                // );
             }
 
             $index++;
@@ -410,11 +410,11 @@ class ProductController
                                 file_put_contents(__DIR__ . '/dump.log', 'Parent ID: ' . $parentId . PHP_EOL, FILE_APPEND);
                             }
 
-                            file_put_contents(
-                                __DIR__ . '/dump2.log',
-                                sprintf('[%s][%s >> %s] %s : %s', date('Y-m-d H:i:s'), str_pad("$from", 5), str_pad("$to", 5), str_pad("$index", 5), $data['id']) . PHP_EOL,
-                                FILE_APPEND
-                            );
+                            // file_put_contents(
+                            //     __DIR__ . '/dump2.log',
+                            //     sprintf('[%s][%s >> %s] %s : %s', date('Y-m-d H:i:s'), str_pad("$from", 5), str_pad("$to", 5), str_pad("$index", 5), $data['id']) . PHP_EOL,
+                            //     FILE_APPEND
+                            // );
                         }
 
                         $variation['parent_id'] = $parentId;
@@ -424,11 +424,11 @@ class ProductController
                             file_put_contents(__DIR__ . '/dump.log', 'Variation processed' . PHP_EOL, FILE_APPEND);
                         }
 
-                        file_put_contents(
-                            __DIR__ . '/dump2.log',
-                            sprintf('[%s][%s >> %s] %s : %s', date('Y-m-d H:i:s'), str_pad("$from", 5), str_pad("$to", 5), str_pad("$index", 5), $data['id']) . PHP_EOL,
-                            FILE_APPEND
-                        );
+                        // file_put_contents(
+                        //     __DIR__ . '/dump2.log',
+                        //     sprintf('[%s][%s >> %s] %s : %s', date('Y-m-d H:i:s'), str_pad("$from", 5), str_pad("$to", 5), str_pad("$index", 5), $data['id']) . PHP_EOL,
+                        //     FILE_APPEND
+                        // );
                     }
 
                     $index++;

@@ -61,10 +61,10 @@ class CronProvider
         Log::info('Product update executed', $result);
 
         if ($result['processed'] < $result['total']) {
-            wp_schedule_single_event(time() + 600, 'vdisain_interfaces/mtac/products/update');
+            wp_schedule_single_event(time() + 120, 'vdisain_interfaces/mtac/products/update');
             return;
         }
 
-        wp_schedule_single_event(time() + 600, 'vdisain_interfaces/mtac/products/destroy');
+        wp_schedule_single_event(time() + 120, 'vdisain_interfaces/mtac/products/destroy');
     }
 }
