@@ -188,7 +188,7 @@ class ProductController
         $page = $request->has_param('page') 
             ? max((int) $request->get_param(1), 1) 
             : ($this->filterIsEmpty($filter) ? (int) get_option('vdisain_mtac_schedule_products_next_page', 1) : 1);
-        $perPage = $request->has_param('per_page') ? (int) $request->get_param('per_page') : 100;
+        $perPage = $request->has_param('per_page') ? (int) $request->get_param('per_page') : 200;
 
         $products = $this->filterProducts(
             $this->groupVariations($this->service->get()), 
@@ -385,11 +385,11 @@ class ProductController
                     file_put_contents(__DIR__ . '/dump.log', 'Parent ID: ' . $parentId . PHP_EOL, FILE_APPEND);
                 }
 
-                // file_put_contents(
-                //     __DIR__ . '/dump2.log', 
-                //     sprintf('[%s][%s >> %s] %s : %s', date('Y-m-d H:i:s'), str_pad("$from", 5), str_pad("$to", 5), str_pad("$index", 5), $data['id']) . PHP_EOL, 
-                //     FILE_APPEND
-                // );
+                file_put_contents(
+                    __DIR__ . '/dump2.log', 
+                    sprintf('[%s][%s >> %s] %s : %s', date('Y-m-d H:i:s'), str_pad("$from", 5), str_pad("$to", 5), str_pad("$index", 5), $data['id']) . PHP_EOL, 
+                    FILE_APPEND
+                );
             }
 
             $index++;
@@ -410,11 +410,11 @@ class ProductController
                                 file_put_contents(__DIR__ . '/dump.log', 'Parent ID: ' . $parentId . PHP_EOL, FILE_APPEND);
                             }
 
-                            // file_put_contents(
-                            //     __DIR__ . '/dump2.log',
-                            //     sprintf('[%s][%s >> %s] %s : %s', date('Y-m-d H:i:s'), str_pad("$from", 5), str_pad("$to", 5), str_pad("$index", 5), $data['id']) . PHP_EOL,
-                            //     FILE_APPEND
-                            // );
+                            file_put_contents(
+                                __DIR__ . '/dump2.log',
+                                sprintf('[%s][%s >> %s] %s : %s', date('Y-m-d H:i:s'), str_pad("$from", 5), str_pad("$to", 5), str_pad("$index", 5), $data['id']) . PHP_EOL,
+                                FILE_APPEND
+                            );
                         }
 
                         $variation['parent_id'] = $parentId;
@@ -424,11 +424,11 @@ class ProductController
                             file_put_contents(__DIR__ . '/dump.log', 'Variation processed' . PHP_EOL, FILE_APPEND);
                         }
 
-                        // file_put_contents(
-                        //     __DIR__ . '/dump2.log',
-                        //     sprintf('[%s][%s >> %s] %s : %s', date('Y-m-d H:i:s'), str_pad("$from", 5), str_pad("$to", 5), str_pad("$index", 5), $data['id']) . PHP_EOL,
-                        //     FILE_APPEND
-                        // );
+                        file_put_contents(
+                            __DIR__ . '/dump2.log',
+                            sprintf('[%s][%s >> %s] %s : %s', date('Y-m-d H:i:s'), str_pad("$from", 5), str_pad("$to", 5), str_pad("$index", 5), $data['id']) . PHP_EOL,
+                            FILE_APPEND
+                        );
                     }
 
                     $index++;
