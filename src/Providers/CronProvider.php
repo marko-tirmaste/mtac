@@ -26,28 +26,29 @@ class CronProvider
      */
     public function register(): void
     {
-        if (empty(vi_config('mtac.schedule.products.time'))) {
+        if (empty(vi_config('mtac.schedule.products.interval'))) {
             return;
         }
 
         if (!wp_next_scheduled('vdisain_interfaces/mtac/products/update')) {
-            $time = explode(':', vi_config('mtac.schedule.products.time'));
+            // $time = explode(':', vi_config('mtac.schedule.products.time'));
 
-            $timestamp = strtotime(
-                sprintf(
-                    '%s %s:%s:%s', 
-                    date('Y-m-d'), 
-                    str_pad($time[0] ?? '00', 2, '0', STR_PAD_LEFT),
-                    str_pad($time[1] ?? '00', 2, '0', STR_PAD_LEFT),
-                    str_pad($time[2] ?? '00', 2, '0', STR_PAD_LEFT),
-                )
-            );
+            // $timestamp = strtotime(
+            //     sprintf(
+            //         '%s %s:%s:%s', 
+            //         date('Y-m-d'), 
+            //         str_pad($time[0] ?? '00', 2, '0', STR_PAD_LEFT),
+            //         str_pad($time[1] ?? '00', 2, '0', STR_PAD_LEFT),
+            //         str_pad($time[2] ?? '00', 2, '0', STR_PAD_LEFT),
+            //     )
+            // );
 
-            if ($timestamp < time()) {
-                $timestamp += 86400;
-            }
+            // if ($timestamp < time()) {
+            //     $timestamp += 86400;
+            // }
 
-            wp_schedule_single_event($timestamp, 'vdisain_interfaces/mtac/products/update');
+            // wp_schedule_single_event($timestamp, 'vdisain_interfaces/mtac/products/update');
+            wp_schedule_event(time(), vi_config('mtac.schedule.products.interval'), 'vdisain_interfaces/mtac/products/update');
         }
 
         add_action('vdisain_interfaces/mtac/products/update', [$this, 'handle']);
@@ -60,11 +61,13 @@ class CronProvider
 
         Log::info('Product update executed', $result);
 
-        if ($result['processed'] < $result['total']) {
-            wp_schedule_single_event(time() + 120, 'vdisain_interfaces/mtac/products/update');
-            return;
-        }
+        // if ($result['processed'] < $result['total']) {
+        //     wp_schedule_single_event(time() + 120, 'vdisain_interfaces/mtac/products/update');
+        //     return;
+        // }
 
-        wp_schedule_single_event(time() + 120, 'vdisain_interfaces/mtac/products/destroy');
+        if ($result['processed'] >= $result['total']) {
+            wp_schedule_single_event(time() + 120, 'vdisain_interfaces/mtac/products/destroy');
+        }
     }
 }

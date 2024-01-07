@@ -188,7 +188,7 @@ class ProductController
         $page = $request->has_param('page') 
             ? max((int) $request->get_param(1), 1) 
             : ($this->filterIsEmpty($filter) ? (int) get_option('vdisain_mtac_schedule_products_next_page', 1) : 1);
-        $perPage = $request->has_param('per_page') ? (int) $request->get_param('per_page') : 200;
+        $perPage = $request->has_param('per_page') ? (int) $request->get_param('per_page') : 100;
 
         $products = $this->filterProducts(
             $this->groupVariations($this->service->get()), 
