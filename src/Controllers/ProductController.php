@@ -124,7 +124,7 @@ class ProductController
         $this->processImport($this->groupVariations($products), $perPage, $page);
 
         update_option('vdisain_mtac_schedule_products_last', $now);
-        update_option('vdisain_mtac_schedule_products_next_page', $page * $perPage > $products->count() ? 1 : $page + 1);
+        update_option('vdisain_mtac_schedule_products_next_page', $page * $perPage >= $products->count() ? 1 : $page + 1);
 
         return [
             'processed' => min($page * $perPage, $products->count()),
@@ -208,6 +208,8 @@ class ProductController
             ...array_filter($filter),
             'processed' => min($page * $perPage, $total ?? 0),
             'total' => $total ?? 0,
+            'page' => $page,
+            'per_page' => $perPage,
             'time' => round(microtime(true) - $start, 3),
             'log' => Logger::array(),
         ]);
