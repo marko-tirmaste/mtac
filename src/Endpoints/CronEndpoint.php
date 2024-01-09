@@ -86,53 +86,55 @@ class CronEndpoint extends Endpoint implements EndpointContract
 
     private function syncProducts(): void
     {
-        if (empty(vi_config('mtac.schedule.products.time'))) {
+        if (empty(vi_config('mtac.schedule.products.interval'))) {
             return;
         }
 
-        $time = explode(':', vi_config('mtac.schedule.products.time'));
+        // $time = explode(':', vi_config('mtac.schedule.products.time'));
         $gap = $this->gap(vi_config('mtac.schedule.products.interval'));
 
-        if (empty($time) || empty($gap)) {
-            Logger::warn('Schedule for product sync not found!');
-            return;
-        }
+        // if (empty($time) || empty($gap)) {
+        //     Logger::warn('Schedule for product sync not found!');
+        //     return;
+        // }
 
-        $start = strtotime(
-            sprintf(
-                '%s %s:%s:%s',
-                date('Y-m-d'),
-                str_pad($time[0] ?? '00', 2, '0', STR_PAD_LEFT),
-                str_pad($time[1] ?? '00', 2, '0', STR_PAD_LEFT),
-                str_pad($time[2] ?? '00', 2, '0', STR_PAD_LEFT),
-            )
-        ) /* - 10800 */;
+        // $start = strtotime(
+        //     sprintf(
+        //         '%s %s:%s:%s',
+        //         date('Y-m-d'),
+        //         str_pad($time[0] ?? '00', 2, '0', STR_PAD_LEFT),
+        //         str_pad($time[1] ?? '00', 2, '0', STR_PAD_LEFT),
+        //         str_pad($time[2] ?? '00', 2, '0', STR_PAD_LEFT),
+        //     )
+        // ) /* - 10800 */;
 
-        if (abs(time() - $start) < $gap / 2 || isset($_GET['start'])) {
-            Log::info('Product update started.');
-            update_option('vdisain_mtac_schedule_products_next_page', 1);
-            update_option('vdisain_mtac_schedule_products_running', 1);
-        }
+        // if (abs(time() - $start) < $gap / 2 || isset($_GET['start'])) {
+        //     Log::info('Product update started.');
+        //     update_option('vdisain_mtac_schedule_products_next_page', 1);
+        //     update_option('vdisain_mtac_schedule_products_running', 1);
+        // }
 
         $isRunning = get_option('vdisain_mtac_schedule_products_running');
 
         $next = (int) get_option('vdisain_mtac_schedule_products_last') + $gap;
 
-        if (vi()->isVerbose()) {
-            Logger::describe(sprintf(
-                'Scheduled product sync: %s, now: %s, gap: %s, started: %s, is running: %s, updating: %s.', 
-                date('Y-m-d H:i:s', $next),
-                date('Y-m-d H:i:s'),
-                $gap,
-                date('Y-m-d H:i:s', $start),
-                empty($isRunning) ? 'no' : 'yes',
-                empty($isRunning) || $next > time() ? 'no' : 'yes'
-            ));
-        }
+        // if (vi()->isVerbose()) {
+        //     Logger::describe(sprintf(
+        //         'Scheduled product sync: %s, now: %s, gap: %s, started: %s, is running: %s, updating: %s.', 
+        //         date('Y-m-d H:i:s', $next),
+        //         date('Y-m-d H:i:s'),
+        //         $gap,
+        //         date('Y-m-d H:i:s', $start),
+        //         empty($isRunning) ? 'no' : 'yes',
+        //         empty($isRunning) || $next > time() ? 'no' : 'yes'
+        //     ));
+        // }
 
         if (empty($isRunning) || $next > time()) {
             return;
         }
+
+        update_option('vdisain_mtac_schedule_products_running', 1);
 
         $result = vi()->make(ProductController::class)->import();
         Logger::describe('Product sync at ' . date('Y-m-d H:i:s'));
@@ -142,8 +144,10 @@ class CronEndpoint extends Endpoint implements EndpointContract
         if ($result['processed'] >= $result['total']) {
             Log::info('Product update completed.');
             vi()->make(ProductController::class)->destroy();
-            delete_option('vdisain_mtac_schedule_products_running');
+            update_option('vdisain_mtac_schedule_products_next_page', 1);
         }
+        
+        delete_option('vdisain_mtac_schedule_products_running');
     }
 
     private function gap(string $key): int

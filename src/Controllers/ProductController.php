@@ -201,7 +201,7 @@ class ProductController
 
         if ($this->filterIsEmpty($filter)) {
             update_option('vdisain_mtac_schedule_products_last', $now);
-            update_option('vdisain_mtac_schedule_products_next_page', $page * $perPage > $total ? 1 : $page + 1);
+            update_option('vdisain_mtac_schedule_products_next_page', $page * $perPage >= $total ? 1 : $page + 1);
         }
 
         return new WP_REST_Response([
