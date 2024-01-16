@@ -20,6 +20,6 @@ return [
         \Seeru\Mtac\Endpoints\Stock\UpdateSingleEndpoint::class,
 
         // Cron
-        \Seeru\Mtac\Endpoints\CronEndpoint::class,
+        // \Seeru\Mtac\Endpoints\CronEndpoint::class,
     ],
 ];

@@ -2,6 +2,8 @@
 
 use Vdisain\Plugins\Interfaces\Support\Route\Route;
 
+Route::get('vdisain-interfaces/mtac/cron', [\Seeru\Mtac\Controllers\CronController::class, 'update']);
+
 Route::get('vdisain-interfaces/mtac/product', [\Seeru\Mtac\Controllers\ProductController::class, 'index']);
 Route::get('vdisain-interfaces/mtac/product/import', [\Seeru\Mtac\Controllers\ProductController::class, 'update']);
 Route::get('vdisain-interfaces/mtac/product/compare', [\Seeru\Mtac\Controllers\ProductCompareController::class, 'index']);
