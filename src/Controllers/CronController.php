@@ -13,17 +13,16 @@ class CronController
 {
     public function update(WP_REST_Request $request): WP_REST_Response
     {
-        $this->syncProducts();
-
         return new WP_REST_Response([
+            'products' => $this->syncProducts(),
             'log' => Logger::array(),
         ]);
     }
 
-    protected function syncProducts(): void
+    protected function syncProducts(): ?array
     {
         if (empty(vi_config('mtac.schedule.products.interval'))) {
-            return;
+            return null;
         }
 
         $gap = $this->gap(vi_config('mtac.schedule.products.interval'));
@@ -38,23 +37,23 @@ class CronController
             'gap' => $gap,
         ]);
 
-        if (empty($isRunning) || $next > time()) {
-            return;
+        if (!empty($isRunning) || $next > time()) {
+            return null;
         }
 
         update_option('vdisain_mtac_schedule_products_running', 1);
 
         $result = vi()->make(ProductController::class)->import();
 
-        Log::info('Product update executed', $result);
-
         if ($result['processed'] >= $result['total']) {
-            Log::info('Product update completed.');
             vi()->make(ProductController::class)->destroy();
             update_option('vdisain_mtac_schedule_products_next_page', 1);
+            Logger::describe('Reseting product sync.');
         }
 
         delete_option('vdisain_mtac_schedule_products_running');
+
+        return $result;
     }
 
     protected function gap(string $key): int

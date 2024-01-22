@@ -40,9 +40,11 @@ defined('ABSPATH') or die;
             <?= __('Product Sync', 'vdisain-interfaces') ?>
         </h3>
 
-        <vd-field name="vdai_mtac_options[markup]" value="<?= vi_config('mtac.markup') ?>">
-            <?= __('Add price markup %', 'seeru-mtac') ?>
-        </vd-field>
+        <vd-markups 
+            name="vdai_mtac_options[markups]" 
+            :value="<?= htmlentities(json_encode(vi_config('mtac.markups', []), JSON_HEX_QUOT), ENT_QUOTES) ?>"
+            label="<?= __('Price markups', 'seeru-mtac') ?>"
+        ></vd-markups>
 
         <vd-field name="vdai_mtac_options[vat]" value="<?= vi_config('mtac.vat') ?>">
             <?= __('Add VAT %', 'seeru-mtac') ?>

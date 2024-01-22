@@ -45,6 +45,10 @@ class OptionController
      */
     public function validate(?array $input = []): ?array
     {
+        if (!empty($input['markups']) && is_string($input['markups'])) {
+            $input['markups'] = json_decode($input['markups'], true);
+        }
+
         return $input;
     }
 }

@@ -257,11 +257,15 @@ class ProductMapper extends Mapper implements MapperContract
             Logger::describe(sprintf('Price: %s €', $price));
         }
 
-        $markup = vi_config('mtac.markup');
+        $markup = vi_collect(vi_config('mtac.markups', []))
+            ->sortByDesc('max')
+            ->filter(fn(array $markup): bool => $markup['max'] <= $data['price'])
+            ->first();
+
         if (!empty($markup)) {
-            $price += ($price / 100) * $markup;
+            $price += ($price / 100) * $markup['markup'];
             if (vi()->isVerbose()) {
-                Logger::describe(sprintf('+ markup: %s €', ($price / 100) * $markup));
+                Logger::describe(sprintf('+ markup: %s €', ($price / 100) * $markup['markup']));
             }
         }
 
