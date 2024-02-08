@@ -180,6 +180,8 @@ class ProductController
      */
     public function update(WP_REST_Request $request): WP_REST_Response
     {
+        set_time_limit(0);
+        
         $now = time();
         $start = microtime(true);
 
