@@ -71,7 +71,7 @@ class CategoryController
             ->pluck('product_type')
             ->unique()
             ->each(function (string $id) use (&$categories): void {
-                $path = explode(' / ', $id);
+                $path = explode(' > ', $id);
                 Arr::set($categories, $path, $path[count($path) - 1]);
             });
 

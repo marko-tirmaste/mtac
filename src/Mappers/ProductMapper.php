@@ -27,7 +27,7 @@ use WP_Term;
 class ProductMapper extends Mapper implements MapperContract
 {
     protected static Collection $categories;
-    
+
     /**
      * Maps mtac product data to the WooCommerce product data
      * 
@@ -97,8 +97,8 @@ class ProductMapper extends Mapper implements MapperContract
         if ($this->isMapping('images', $isNew) && !empty($data['image_link'])) {
             $map['images'] = [
                 $data['image_link'],
-                ...(empty($data['additional_image_link']) 
-                    ? [] 
+                ...(empty($data['additional_image_link'])
+                    ? []
                     : (is_string($data['additional_image_link']) ? [$data['additional_image_link']] : $data['additional_image_link'])
                 ),
             ];
@@ -122,9 +122,9 @@ class ProductMapper extends Mapper implements MapperContract
         return !(empty($rule) || ($rule === 'import' && !$isNew));
     }
 
-    private function mapVariations(array $data): array 
+    private function mapVariations(array $data): array
     {
-        return vi_collect($data['size'])->map(function(array $data): array {
+        return vi_collect($data['size'])->map(function (array $data): array {
             return $this->map($data);
         })->toArray();
     }
@@ -197,11 +197,13 @@ class ProductMapper extends Mapper implements MapperContract
      */
     private function mapId(array $data): ?int
     {
-        /* $id = (int) wc_get_product_id_by_sku($mtacId);
+        if (!empty($data['gtin'])) {
+            $id = (int) wc_get_product_id_by_sku($data['gtin']);
 
-        if (!empty($id)) {
-            return $id;
-        } */
+            if (!empty($id)) {
+                return $id;
+            }
+        }
 
         /** @var \WP_Post */
         $product = vi_collect(
