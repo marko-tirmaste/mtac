@@ -55,6 +55,8 @@ class ProductSyncService
                 'type' => 'variable',
                 ...$this->getAttributes($data),
             ]);
+        } elseif (empty($data['type']) && $this->isVariation($data)) {
+            $data['type'] = 'variation';
         }
 
         $product = new Product(['meta' => ['key' => '_sku', 'value' => $data['gtin']]]);
