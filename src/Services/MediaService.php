@@ -49,12 +49,13 @@ class MediaService extends BaseMediaService
 
         $batchImages = []; // Initialize an array to hold the batch-downloaded images
 
-        foreach ($images as $i => $url) {
+        /** @var \Seeru\Mtac\Models\Image $image */
+        foreach ($images as $i => $image) {
             if (empty($url)) {
                 continue;
             }
 
-            $url = trim($url);
+            $url = trim(string: $image->url);
             $attachment = $this->repo->findWithKey('_vdai_original', $url);
 
             if (!empty($attachment)) {
