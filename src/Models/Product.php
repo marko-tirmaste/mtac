@@ -189,14 +189,14 @@ class Product extends BaseProduct
     {
         $images = vi_collect([new Image(['url' => $data['image_link']])]);
 
+        return $images;
         if (array_key_exists('type', $data) && $data['type'] === 'variation') {
-            return $images;
         }
 
         if (array_key_exists('additional_image_link', $data)) {
             $images = $images->merge(array_map(
                 fn (string $link): Image => new Image(['url' => $link]),
-                $data['additional_image_link'] ?? []
+                (array) ($data['additional_image_link'] ?? [])
             ));
         }
 
