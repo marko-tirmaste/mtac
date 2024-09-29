@@ -129,6 +129,7 @@ class Product extends BaseProduct
             'gtin',
             'mpn',
             'item_group_id',
+            'type',
         ];
 
         foreach (Arr::except($data, $exclude) as $key => $value) {
