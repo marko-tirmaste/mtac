@@ -11,6 +11,7 @@ namespace Seeru\Mtac\Controllers;
 defined('VDAI_PATH') or die;
 
 use Seeru\Mtac\Mappers\ProductMapper;
+use Seeru\Mtac\Services\ProductSyncService;
 use Vdisain\Plugins\Interfaces\Support\Log\Log;
 use Seeru\Mtac\Services\ProductService;
 use Vdisain\Plugins\Interfaces\Exceptions\NotFoundException;
@@ -40,7 +41,8 @@ class ProductController
         protected ProductRepository $repo,
         protected ProductService $service,
     ) {
-        //
+        // Override the media service to keep gallery images
+        add_filter('vdhub/media-service', fn(string $class): string => \Seeru\Mtac\Services\MediaService::class);
     }
 
     public function show(WP_REST_Request $request): WP_REST_Response
@@ -108,27 +110,19 @@ class ProductController
         $now = time();
         $start = microtime(true);
 
-        $products = $this->service->get();
-
         $page = isset($_GET['page']) 
             ? max((int) $_GET['page'], 1)
             : (int) get_option('vdisain_mtac_schedule_products_next_page', 1);
 
         $perPage = isset($_GET['per_page']) ? (int) $_GET['per_page'] : 100;
 
-        if (vi()->isVerbose()) {
-            Logger::describe('Updating products.');
-            Logger::describe(sprintf('Page %s, per page %s, total %s.', $page, $perPage, $products->count()));
-        }
-
-        $this->processImport($this->groupVariations($products), $perPage, $page);
+        $response = vi()->make(ProductSyncService::class)->syncProducts($page, $perPage);
 
         update_option('vdisain_mtac_schedule_products_last', $now);
-        update_option('vdisain_mtac_schedule_products_next_page', $page * $perPage >= $products->count() ? 1 : $page + 1);
+        update_option('vdisain_mtac_schedule_products_next_page', $page * $perPage >= $response['total'] ? 1 : $page + 1);
 
         return [
-            'processed' => min($page * $perPage, $products->count()),
-            'total' => $products->count(),
+            ...$response,
             'page' => $page,
             'per_page' => $perPage,
             'time' => round(microtime(true) - $start, 3),
@@ -192,24 +186,16 @@ class ProductController
             : ($this->filterIsEmpty($filter) ? (int) get_option('vdisain_mtac_schedule_products_next_page', 1) : 1);
         $perPage = $request->has_param('per_page') ? (int) $request->get_param('per_page') : 100;
 
-        $products = $this->filterProducts(
-            $this->groupVariations($this->service->get()), 
-            $filter
-        );
-
-        $total = $this->countProducts($products);
-
-        $this->processImport($products, $perPage, $page);
+        $result = vi()->make(ProductSyncService::class)->syncProducts($page, $perPage);
 
         if ($this->filterIsEmpty($filter)) {
             update_option('vdisain_mtac_schedule_products_last', $now);
-            update_option('vdisain_mtac_schedule_products_next_page', $page * $perPage >= $total ? 1 : $page + 1);
+            update_option('vdisain_mtac_schedule_products_next_page', $page * $perPage >= $result['total'] ? 1 : $page + 1);
         }
 
         return new WP_REST_Response([
             ...array_filter($filter),
-            'processed' => min($page * $perPage, $total ?? 0),
-            'total' => $total ?? 0,
+            ...$result,
             'page' => $page,
             'per_page' => $perPage,
             'time' => round(microtime(true) - $start, 3),
