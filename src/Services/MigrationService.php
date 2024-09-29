@@ -8,6 +8,8 @@ use Vdisain\Plugins\Interfaces\Support\Logger;
 
 class MigrationService
 {
+    private Collection $products;
+
     public function updateVariableProductSKUs(): void
     {
         $this->getVariables()
@@ -50,6 +52,7 @@ class MigrationService
     {
         if (empty($product->sku)) {
             Logger::warn("Product {$product->title} ({$product->id}) has no SKU");
+            $this->fixSKUFromJson((int) $product->id, $product->title);
             return;
         }
 
@@ -57,6 +60,61 @@ class MigrationService
         update_post_meta($product->id, '_mtac_id', "M{$product->sku}");
 
         Logger::describe("Product {$product->title} ({$product->id}) SKU updated to M{$product->sku}");
+    }
+
+    private function fixSKUFromJson(int $id, string $title): void
+    {
+        if (!isset($this->products)) {
+            $this->products = vi()->make(ProductService::class)->get();
+        }
+
+        $variation = $this->getVariableFirstVariation($id);
+
+        if (!$variation) {
+            Logger::warn("Product {$title} ({$id}) has no variations.");
+            return;
+        }
+
+        $product = $this->products->filter(fn(array $p): bool => $p['gtin'] === $variation->sku)->first();
+
+        if (!$product) {
+            Logger::warn("Variation {$variation->title} ({$variation->id}) not found in JSON.");
+            return;
+        }
+
+        if ($product['id'] !== $product['item_group_id']) {
+            $product = $this->products->filter(fn(array $p): bool => $p['id'] === $product['item_group_id'])->first();
+        }
+
+        if (!$product) {
+            Logger::warn("Variation {$variation->title} ({$variation->id}) parent not found in JSON.");
+            return;
+        }
+
+        update_post_meta($id, '_sku', "M{$product['gtin']}");
+        update_post_meta($id, '_mtac_id', "M{$product['gtin']}");
+
+        Logger::describe("Product {$title} ({$id}) SKU updated to M{$product['gtin']}");
+    }
+
+    private function getVariableFirstVariation(int $id): ?object
+    {
+        /** @var \wpdb $wpdb */
+        global $wpdb;
+
+        return $wpdb->get_row(
+            "SELECT
+                p.ID AS id,
+                p.post_title AS title,
+                sku.meta_value AS 'sku'
+            FROM 
+                {$wpdb->posts} p
+                LEFT JOIN {$wpdb->postmeta} AS sku ON p.ID = sku.post_id AND sku.meta_key = '_sku'
+            WHERE
+                p.post_type = 'product_variation'
+                AND p.post_parent = {$id};
+            "
+        );
     }
 
     private function getProductsWithAttachments(): Collection
