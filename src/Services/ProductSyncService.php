@@ -62,7 +62,7 @@ class ProductSyncService
         $product = new Product(['meta' => ['key' => '_sku', 'value' => $data['gtin']]]);
         $product->bind($data);
 
-        if (empty($data['type']) && $this->isVariation($data)) {
+        if ((empty($data['type']) && $this->isVariation($data) || $data['type'] === 'variation')) {
             $parent = $this->getParent($data);
             $product->addParent($parent);
         }
