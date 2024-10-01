@@ -61,6 +61,7 @@ class ProductSyncService
                 'type' => 'variable',
                 ...$this->getAttributes($data),
             ]);
+            $data['type'] = 'variation';
         } elseif (empty($data['type']) && $this->isVariation($data)) {
             $data['type'] = 'variation';
         }
@@ -132,7 +133,7 @@ class ProductSyncService
         $parent =  $this->parents->get($product['item_group_id']);
 
         if (empty($parent)) {
-            $parent =  new Product(['meta' => ['key' => '_sku', 'value' => $product['gtin']]]);
+            $parent =  new Product(['meta' => ['key' => '_sku', 'value' => "M{$product['gtin']}"]]);
             $this->parents->put($product['item_group_id'], $parent);
         }
 
