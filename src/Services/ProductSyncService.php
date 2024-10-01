@@ -42,6 +42,10 @@ class ProductSyncService
                 $this->process($product);
             });
 
+        $this->parents->each(function (Product $product): void {
+            $product->sync();
+        });
+
         return [
             'processed' => $this->processed,
             'total' => $this->products->count(),
