@@ -7,6 +7,7 @@
  * @since 1.0.0 2023-05-09
  */
 namespace Seeru\Mtac\Controllers;
+use Seeru\Mtac\Services\SingleProductSyncService;
 
 defined('VDAI_PATH') or die;
 
@@ -145,22 +146,11 @@ class ProductController
      */
     public function store(WP_REST_Request $request): WP_REST_Response
     {
-        /** @var \Seeru\Mtac\Services\ProductService $service */
-        $service = vi()->make(ProductService::class);
-
-        $product = $service->findOrFail($request->get_param('id'));
-
-        if (!empty($product['item_group_id'])) {
-            $product = $service->findOrFail($product['item_group_id']);
-            $product['variations'] = $service->get()
-                ->filter(fn(array $variation): bool => !empty($variation['item_group_id']) && $variation['item_group_id'] === $product['id'])
-                ->values();
-        }
-
-        $this->processImport(vi_collect([$product]));
+        $result = vi()->make(SingleProductSyncService::class)
+            ->syncProduct((string) $request->get_param('id'));
 
         return new WP_REST_Response([
-            'product' => $product,
+            ...$result,
             'logs' => Logger::array(),
         ]);
     }
@@ -270,15 +260,15 @@ class ProductController
     /**
      * Imports single product
      * 
-     * @param int $id mtac product id
+     * @param string $sku Product SKU
      * 
      * @throws NotFoundException When product was not found
      */
-    public function importProduct(int $id): void
+    public function importProduct(string $sku): void
     {
-        Logger::describe("Importing single product with id {$id}.");
+        Logger::describe("Importing single product with id {$sku}.");
 
-        $data = vi()->make(ProductService::class)->find($id);
+        $data = vi()->make(ProductService::class)->find($sku);
 
         if (vi()->isVerbose(3)) {
             Logger::describe('ProductController::importProduct() $data');
@@ -301,13 +291,13 @@ class ProductController
      */
     public function updateProduct(int $id): void
     {
-        $code = get_post_meta($id, '_mtac_id', true);
+        $sku = get_post_meta($id, '_sku', true);
 
-        if (empty($code)) {
+        if (empty($sku)) {
             throw new NotFoundException();
         }
 
-        $this->importProduct($code);
+        $this->importProduct($sku);
     }
 
     protected function groupVariations(Collection $products): Collection

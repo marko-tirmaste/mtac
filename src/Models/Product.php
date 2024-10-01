@@ -80,7 +80,7 @@ class Product extends BaseProduct
         $map = [
             'status' => 'publish',
 
-            'type' => array_key_exists('type', $data) && $data['type'] === 'variable' ? static::TYPE_VARIABLE : static::TYPE_SIMPLE,
+            'type' => array_key_exists('type', $data) ? $data['type'] : static::TYPE_SIMPLE,
 
             'categories' => $this->mapMtacCategories($data),
 
@@ -126,6 +126,7 @@ class Product extends BaseProduct
             'condition',
             'availability',
             'price',
+            'sale_price',
             'gtin',
             'mpn',
             'item_group_id',
@@ -146,7 +147,7 @@ class Product extends BaseProduct
                 'name' => $this->attributeMap[$key] ?? $key,
                 'options' => $this->mapMtacAttributeOptions($value),
                 'visible' => true,
-                'variation' => true,
+                'variation' => $key !== 'brand',
             ]);
         }
 
@@ -175,7 +176,7 @@ class Product extends BaseProduct
     {
         $path = array_map(
             fn (string $name): string => sanitize_title($name),
-            explode(' / ', $data['product_type'])
+            explode(' > ', $data['product_type'])
         );
 
         return Cache::get('woocommerce_categories')
@@ -183,6 +184,7 @@ class Product extends BaseProduct
             ->pluck('term_id')
             ->values()
             ->all();
+
     }
 
     protected function mapMtacImages(array $data): Collection

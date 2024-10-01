@@ -13,17 +13,17 @@ defined('ABSPATH') or die;
 
 class ProductSyncService
 {
-    // private int $added = 0;
-    // private int $updated = 0;
-    private int $deleted = 0;
-    private int $processed = 0;
+    // protected int $added = 0;
+    // protected int $updated = 0;
+    protected int $deleted = 0;
+    protected int $processed = 0;
 
-    private Collection $products;
+    protected Collection $products;
 
-    private Collection $parents;
+    protected Collection $parents;
 
     public function __construct(
-        private ProductService $service,
+        protected ProductService $service,
     ) {
         // add_filter('vdhub/media/service', fn (): string => MediaService::class);
     }
@@ -52,7 +52,7 @@ class ProductSyncService
         ];
     }
 
-    private function process(array $data): void
+    protected function process(array $data): void
     {
         if (empty($data['type']) && $this->isVariable($data)) {
             $this->process([
@@ -68,7 +68,7 @@ class ProductSyncService
         $product = new Product(['meta' => ['key' => '_sku', 'value' => $data['gtin']]]);
         $product->bind($data);
 
-        if ((empty($data['type']) && $this->isVariation($data) || $data['type'] === 'variation')) {
+        if ((empty($data['type']) && $this->isVariation(product: $data) || (!empty($data['type']) && $data['type'] === 'variation'))) {
             $parent = $this->getParent($data);
             $product->addParent($parent);
         }
@@ -84,23 +84,23 @@ class ProductSyncService
         }
     }
 
-    private function isVariable(array $product): bool
+    protected function isVariable(array $product): bool
     {
         return $product['id'] === $product['item_group_id']
             && $this->products->filter(fn (array $p): bool => !empty($p['item_group_id']) && $p['item_group_id'] === $product['id'])->count() > 1;
     }
 
-    private function isVariation(array $product): bool
+    protected function isVariation(array $product): bool
     {
         return $this->products->filter(fn(array $p): bool => !empty($p['item_group_id']) && $p['item_group_id'] === $product['item_group_id'])->count() > 1;
     }
 
-    private function slice(int $page, int $perPage): Collection
+    protected function slice(int $page, int $perPage): Collection
     {
         return $this->products->chunk($perPage)->get($page - 1, vi_collect());
     }
 
-    private function getAttributes(array $product): array
+    protected function getAttributes(array $product): array
     {
         $attributes = [
             'color' => [],
@@ -122,12 +122,12 @@ class ProductSyncService
         return $attributes;
     }
 
-    private function getCategories(): Collection
+    protected function getCategories(): Collection
     {
         return vi()->make(key: CategoryRepository::class)->all();
     }
 
-    private function getParent(array $product): ?Product
+    protected function getParent(array $product): ?Product
     {
         $parent =  $this->parents->get($product['item_group_id']);
 

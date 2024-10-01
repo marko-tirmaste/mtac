@@ -65,20 +65,24 @@ class ProductService extends MtacService
     /**
      * Gets single product from mtac
      * 
-     * @param int $id mtac item code
+     * @param string $sku 
      * 
      * @return array|null
      */
-    public function find(int $id): ?array
+    public function find(string $sku): ?array
     {
+        if (substr($sku, 0, 1) === 'M') {
+            $sku = substr($sku, 1);
+        }
+
         return $this->get()
-            ->filter(function (array $item) use ($id): bool {
-                return (int) $item['id'] === $id;
+            ->filter(function (array $item) use ($sku): bool {
+                return $item['gtin'] === $sku;
             })
             ->first();
     }
 
-    public function findOrFail(int $id): array
+    public function findOrFail(string $id): array
     {
         $product = $this->find($id);
 
