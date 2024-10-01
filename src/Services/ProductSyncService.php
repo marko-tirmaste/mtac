@@ -32,7 +32,9 @@ class ProductSyncService
     {
         $this->parents = new Collection();
 
-        $this->products = $this->service->get();
+        $this->products = $this->service->get()
+            ->sortBy(fn(array $product): int => $product['id'] === ($product['item_group_id'] ?? 0) ? 0 : 1);
+
         Cache::put('woocommerce_categories', $this->getCategories());
 
         $this->slice($page, $perPage)
