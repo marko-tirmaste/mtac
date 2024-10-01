@@ -146,7 +146,7 @@ class Product extends BaseProduct
                 'name' => $this->attributeMap[$key] ?? $key,
                 'options' => $this->mapMtacAttributeOptions($value),
                 'visible' => true,
-                'variation' => false,
+                'variation' => true,
             ]);
         }
 
