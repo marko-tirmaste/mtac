@@ -77,6 +77,8 @@ class Product extends BaseProduct
             // 'en' => $data['Desc'] ?? null,
         ];
 
+        $price = $this->mapPrice($data);
+
         $map = [
             'status' => 'publish',
 
@@ -95,7 +97,8 @@ class Product extends BaseProduct
             'manage_stock' => false,
             'stock_status' => !empty($data['availability']) && $data['availability'] === 'in stock' ? 'instock' : 'outofstock',
 
-            'price' => $this->mapPrice($data),
+            'price' => $price,
+            'regular_price' => $price,
 
             'meta' => [
                 '_mtac_id' => $data['id'],
@@ -215,12 +218,13 @@ class Product extends BaseProduct
     private function mapPrice($data): ?float
     {
         if (!isset($data['price'])) {
+            Logger::warn('Price is not set');
             return null;
         }
 
         $price = (float) $data['price'];
 
-        Logger::describe(sprintf('Price: %s €', $price), null, 1);
+        Logger::describe(sprintf('Price: %s €', $price), null);
 
         $markup = vi_collect(vi_config('mtac.markups', []))
             ->sortByDesc('max')
