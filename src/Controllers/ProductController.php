@@ -155,6 +155,22 @@ class ProductController
         ]);
     }
 
+    public function updateProduct(WP_REST_Request $request): WP_REST_Response
+    {
+        $sku = get_post_meta((int) $request->get_param('id'), '_sku', true);
+
+        if (empty($sku)) {
+            throw new NotFoundException();
+        }
+
+        $result = vi()->make(SingleProductSyncService::class)->syncProduct($sku);
+
+        return new WP_REST_Response([
+            ...$result,
+            'logs' => Logger::array(),
+        ]);
+    }
+
     /**
      * Updates the M-Tac products
      * 
@@ -280,24 +296,6 @@ class ProductController
         }
 
         $this->processImport(vi_collect([$data]));
-    }
-
-    /**
-     * Updates single product
-     * 
-     * @param int $id WooCommerce product ID
-     * 
-     * @throws NotFoundException When product was not found
-     */
-    public function updateProduct(int $id): void
-    {
-        $sku = get_post_meta($id, '_sku', true);
-
-        if (empty($sku)) {
-            throw new NotFoundException();
-        }
-
-        $this->importProduct($sku);
     }
 
     protected function groupVariations(Collection $products): Collection

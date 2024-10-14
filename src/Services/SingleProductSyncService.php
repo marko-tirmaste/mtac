@@ -18,7 +18,7 @@ class SingleProductSyncService extends ProductSyncService
         $this->parents = new Collection();
         $this->products = new Collection();
 
-        $product = $this->service->find($sku);
+        $product = $this->service->find(sku: $sku);
 
         if (!$product) {
             return ['processed' => 0, 'total' => 0];

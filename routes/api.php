@@ -11,3 +11,4 @@ Route::get('vdisain-interfaces/mtac/product/sync', [\Seeru\Mtac\Controllers\Prod
 Route::get('vdisain-interfaces/mtac/product/compare', [\Seeru\Mtac\Controllers\ProductCompareController::class, 'index']);
 Route::get('vdisain-interfaces/mtac/product/(?P<id>[a-zA-Z0-9-]+)', [\Seeru\Mtac\Controllers\ProductController::class, 'show']);
 Route::get('vdisain-interfaces/mtac/product/(?P<id>[a-zA-Z0-9-]+)/import', [\Seeru\Mtac\Controllers\ProductController::class, 'store']);
+Route::get('vdisain-interfaces/mtac/product/(?P<id>[0-9]+)/update', [\Seeru\Mtac\Controllers\ProductController::class, 'updateProduct']);
