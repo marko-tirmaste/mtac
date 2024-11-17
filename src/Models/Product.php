@@ -77,7 +77,8 @@ class Product extends BaseProduct
             // 'en' => $data['Desc'] ?? null,
         ];
 
-        $price = $this->mapPrice($data);
+        $regularPrice = $this->mapPrice($data);
+        $salePrice = $this->mapPrice($data, 'sale_price');
 
         $map = [
             'status' => 'publish',
@@ -97,8 +98,9 @@ class Product extends BaseProduct
             'manage_stock' => false,
             'stock_status' => !empty($data['availability']) && $data['availability'] === 'in stock' ? 'instock' : 'outofstock',
 
-            'price' => $price,
-            'regular_price' => $price,
+            'price' => $salePrice ?? $regularPrice,
+            'regular_price' => $regularPrice,
+            'sale_price' => $salePrice,
 
             'meta' => [
                 '_mtac_id' => $data['id'],
@@ -192,10 +194,10 @@ class Product extends BaseProduct
 
     protected function mapMtacImages(array $data): Collection
     {
-        $images = vi_collect([new Image(['url' => $data['image_link']])]);
+        $images = vi_collect(!empty($data['image_link']) ? [new Image(['url' => $data['image_link']])] : []);
 
-        return $images;
         if (array_key_exists('type', $data) && $data['type'] === 'variation') {
+            return $images;
         }
 
         if (array_key_exists('additional_image_link', $data)) {
@@ -215,31 +217,26 @@ class Product extends BaseProduct
      * 
      * @return float|null
      */
-    private function mapPrice($data): ?float
+    private function mapPrice($data, string $key = 'price'): ?float
     {
-        if (!isset($data['price'])) {
-            Logger::warn('Price is not set');
+        if (!isset($data[$key])) {
             return null;
         }
 
-        $price = (float) $data['price'];
-
-        Logger::describe(sprintf('Price: %s €', $price), null);
+        $price = (float) $data[$key];
 
         $markup = vi_collect(vi_config('mtac.markups', []))
             ->sortByDesc('max')
-            ->filter(fn(array $markup): bool => $markup['max'] <= $data['price'])
+            ->filter(fn(array $markup): bool => $markup['max'] <= $price)
             ->first();
 
         if (!empty($markup)) {
             $price += ($price / 100) * $markup['markup'];
-            Logger::describe(sprintf('+ markup: %s €', ($price / 100) * $markup['markup']), null, 1);
         }
 
         $vat = vi_config('mtac.vat');
         if (!empty($vat)) {
             $price += ($price / 100) * $vat;
-            Logger::describe(sprintf('+ VAT: %s €', ($price / 100) * $vat), null, 1);
         }
 
         return $price;
