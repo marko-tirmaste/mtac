@@ -148,11 +148,14 @@ class Product extends BaseProduct
                 continue;
             }
 
+            $name = $this->attributeMap[$key] ?? $key;
+
             $attributes->push([
-                'name' => $this->attributeMap[$key] ?? $key,
+                'taxonomy' => wc_attribute_taxonomy_name($name['et']),
+                'name' => $name,
                 'options' => $this->mapMtacAttributeOptions($value),
-                'visible' => true,
-                'variation' => $key !== 'brand',
+                'is_public' => true,
+                'is_variation' => $key !== 'brand',
             ]);
         }
 
@@ -164,7 +167,9 @@ class Product extends BaseProduct
         if (is_array($data)) {
             return array_map(
                 fn (string $value): array => [
-                    'et' => $value,
+                    'name' => [
+                        'et' => $value
+                    ],
                 ],
                 $data
             );
@@ -172,7 +177,9 @@ class Product extends BaseProduct
 
         return [
             [
-                'et' => $data,
+                'name' => [
+                    'et' => $data
+                ],
             ],
         ];
     }
@@ -212,9 +219,9 @@ class Product extends BaseProduct
 
     /**
      * Maps product price, adds markup and VAT if necessery
-     * 
+     *
      * @param array $data Product data
-     * 
+     *
      * @return float|null
      */
     private function mapPrice($data, string $key = 'price'): ?float

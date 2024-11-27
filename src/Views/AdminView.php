@@ -1,7 +1,7 @@
 <?php
 /**
  * View class for mtac admin page
- * 
+ *
  * @author Marko Tirmaste <marko.tirmaste@gmail.com>
  * @package Seeru\Mtac\Views
  * @since 1.0.0 2023-05-04
@@ -17,7 +17,7 @@ use Vdisain\Plugins\Interfaces\Models\Settings;
 
 /**
  * View class for mtac admin page
- * 
+ *
  * @package Seeru\Mtac\Views
  * @since 1.0.0 2023-05-04
  */
@@ -53,6 +53,13 @@ class AdminView extends View
             ->all();
     }
 
+    public array $categories;
+    /**
+     * Cron schedules
+     *
+     * @var array
+     */
+    public array $schedules;
     /**
      * Settings
      * @var Settings
@@ -64,14 +71,6 @@ class AdminView extends View
      */
     protected ?string $name = 'mtac';
 
-    protected array $categories;
-    /**
-     * Cron schedules
-     * 
-     * @var array
-     */
-    protected array $schedules;
-
     /**
      * Register admin menu link and page
      */
@@ -82,11 +81,11 @@ class AdminView extends View
         }
 
         add_submenu_page(
-            'vdisain-interfaces-dashboard',
-            __('M-Tac', 'seeru-mtac'),
-            __('M-Tac', 'seeru-mtac'),
+            'vdisain-mtac',
+            __('Settings', 'seeru-mtac'),
+            __('Settings', 'seeru-mtac'),
             'manage_options',
-            'seeru-mtac',
+            'seeru-mtac-settings',
             function (): void {
                 echo (new static())->render('settings', VDAI_PATH_PACKAGES . '/mtac/resources');
             },

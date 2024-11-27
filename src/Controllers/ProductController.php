@@ -1,7 +1,7 @@
 <?php
 /**
  * Controller class for handling actions with M-Tac products
- * 
+ *
  * @author Marko Tirmaste <marko.tirmaste@gmail.com>
  * @package Seeru\Mtac\Controllers
  * @since 1.0.0 2023-05-09
@@ -26,7 +26,7 @@ set_time_limit(0);
 
 /**
  * Controller class for handling actions with M-Tac products
- * 
+ *
  * @package Seeru\Mtac\Controllers
  * @since 1.0.0 2023-05-09
  */
@@ -34,7 +34,7 @@ class ProductController
 {
     /**
      * Initializes the controller instance
-     * 
+     *
      * @param \Vdisain\Plugins\Interfaces\Repositories\ProductRepository $repo WooCommerce product repository
      * @param \Seeru\Mtac\Services\ProductService $service M-Tac product service
      */
@@ -67,7 +67,7 @@ class ProductController
 
     /**
      * Removes products removed by M-Tac
-     * 
+     *
      * @return array
      */
     public function destroy(): array
@@ -100,10 +100,10 @@ class ProductController
             'removed' => $products->all(),
         ];
     }
-    
+
     /**
      * Imports products from mtac
-     * 
+     *
      * @return array<int>
      */
     public function import(): array
@@ -111,7 +111,7 @@ class ProductController
         $now = time();
         $start = microtime(true);
 
-        $page = isset($_GET['page']) 
+        $page = isset($_GET['page'])
             ? max((int) $_GET['page'], 1)
             : (int) get_option('vdisain_mtac_schedule_products_next_page', 1);
 
@@ -139,9 +139,9 @@ class ProductController
 
     /**
      * Adds single M-Tac product to WooCommerce
-     * 
+     *
      * @param \WP_REST_Request $request The request object
-     * 
+     *
      * @return \WP_REST_Response
      */
     public function store(WP_REST_Request $request): WP_REST_Response
@@ -173,38 +173,44 @@ class ProductController
 
     /**
      * Updates the M-Tac products
-     * 
+     *
      * @param \WP_REST_Request $request The request object
-     * 
+     *
      * @return \WP_REST_Response
      */
     public function update(WP_REST_Request $request): WP_REST_Response
     {
         set_time_limit(0);
-        
+
         $now = time();
+        $memory = memory_get_usage();
         $start = microtime(true);
 
         $filter = $this->getFilter($request);
 
-        $page = $request->has_param('page') 
-            ? max((int) $request->get_param('page'), 1) 
+        $page = $request->has_param('page')
+            ? max((int) $request->get_param('page'), 1)
             : ($this->filterIsEmpty($filter) ? (int) get_option('vdisain_mtac_schedule_products_next_page', 1) : 1);
         $perPage = $request->has_param('per_page') ? (int) $request->get_param('per_page') : 100;
 
-        $result = vi()->make(ProductSyncService::class)->syncProducts($page, $perPage);
+        $report = [
+            ...array_filter($filter),
+            ...vi()->make(ProductSyncService::class)->syncProducts($page, $perPage),
+            'page' => $page,
+            'per_page' => $perPage,
+            'updated_at' => date('Y-m-d H:i:s', $now),
+            'time' => round(microtime(true) - $start, 3),
+            'memory' => memory_get_usage() - $memory,
+        ];
 
         if ($this->filterIsEmpty($filter)) {
             update_option('vdisain_mtac_schedule_products_last', $now);
-            update_option('vdisain_mtac_schedule_products_next_page', $page * $perPage >= $result['total'] ? 1 : $page + 1);
+            update_option('vdisain_mtac_schedule_products_next_page', $page * $perPage >= $report['total'] ? 1 : $page + 1);
+            update_option('vdisain_mtac_schedule_products_report', $report);
         }
 
         return new WP_REST_Response([
-            ...array_filter($filter),
-            ...$result,
-            'page' => $page,
-            'per_page' => $perPage,
-            'time' => round(microtime(true) - $start, 3),
+            ...$report,
             'log' => Logger::array(),
         ]);
     }
@@ -254,7 +260,7 @@ class ProductController
 
     /**
      * Imports products from mtac
-     * 
+     *
      * @return array<int>
      */
     public function importAll(): array
@@ -275,9 +281,9 @@ class ProductController
 
     /**
      * Imports single product
-     * 
+     *
      * @param string $sku Product SKU
-     * 
+     *
      * @throws NotFoundException When product was not found
      */
     public function importProduct(string $sku): void
@@ -330,7 +336,7 @@ class ProductController
 
     /**
      * Processes the imported products
-     * 
+     *
      * @param Collection $products Collection of imported products
      * @param int|null $perPage Optional. Number of products per page to process. Default 0 - no pagination
      * @param int|null $page Optional. Page to process
@@ -364,8 +370,8 @@ class ProductController
                 }
 
                 file_put_contents(
-                    __DIR__ . '/dump2.log', 
-                    sprintf('[%s][%s >> %s] %s : %s', date('Y-m-d H:i:s'), str_pad("$from", 5), str_pad("$to", 5), str_pad("$index", 5), $data['id']) . PHP_EOL, 
+                    __DIR__ . '/dump2.log',
+                    sprintf('[%s][%s >> %s] %s : %s', date('Y-m-d H:i:s'), str_pad("$from", 5), str_pad("$to", 5), str_pad("$index", 5), $data['id']) . PHP_EOL,
                     FILE_APPEND
                 );
             }
@@ -452,15 +458,15 @@ class ProductController
 
         return vi_collect(
             $wpdb->get_results(
-                "SELECT 
+                "SELECT
                     `posts`.`post_title` AS `title`, `postmeta`.`post_id` AS `product_id`, `postmeta`.`meta_value` AS `mtac_id`
-                FROM 
+                FROM
                     `{$wpdb->postmeta}` AS `postmeta`
-                    LEFT JOIN `{$wpdb->posts}` AS `posts` ON `postmeta`.`post_id` = `posts`.`ID`  
-                WHERE 
+                    LEFT JOIN `{$wpdb->posts}` AS `posts` ON `postmeta`.`post_id` = `posts`.`ID`
+                WHERE
                     `postmeta`.`meta_key` = '_mtac_id'
                     AND `posts`.`post_status` = 'publish'
-                GROUP BY 
+                GROUP BY
                     `postmeta`.`post_id`;",
             )
         );

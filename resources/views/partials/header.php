@@ -1,7 +1,7 @@
 <?php
-/** 
+/**
  * Template partial for the page header part
- * 
+ *
  * @author Marko Tirmaste <marko.tirmaste@gmail.com>
  * @since 0.0.1 2023-06-22
  */
@@ -12,10 +12,16 @@ $page = isset($_GET['page']) ? $_GET['page'] : null;
 
 $menu = [
     [
-        'label' => __('Settings', 'seeru-mtac'), 
-        'url' => '/wp-admin/admin.php?page=seeru-mtac', 
-        'icon' => 'gears',
+        'label' => __('Dashboard', 'seeru-mtac'),
+        'url' => '/wp-admin/admin.php?page=seeru-mtac',
+        'icon' => 'chart-pie',
         'active' => $page === 'seeru-mtac',
+    ],
+    [
+        'label' => __('Settings', 'seeru-mtac'),
+        'url' => '/wp-admin/admin.php?page=seeru-mtac-settings',
+        'icon' => 'gears',
+        'active' => $page === 'seeru-mtac-settings',
     ],
 ];
 

@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 declare(strict_types=1);
 
@@ -46,21 +46,19 @@ class ProductSyncService
             $product->sync();
         });
 
+        $total = $this->products->count();
+
         return [
             'processed' => $this->processed,
-            'total' => $this->products->count(),
+            'total' => $total,
+            'pages' => ceil($total / $perPage),
         ];
     }
 
     protected function process(array $data): void
     {
         if (empty($data['type']) && $this->isVariable($data)) {
-            $this->process([
-                ...$data,
-                'gtin' => "M{$data['gtin']}",
-                'type' => 'variable',
-                ...$this->getAttributes($data),
-            ]);
+            $this->processVariable($data);
             $data['type'] = 'variation';
         } elseif (empty($data['type']) && $this->isVariation($data)) {
             $data['type'] = 'variation';
@@ -79,10 +77,25 @@ class ProductSyncService
         }
 
         $this->processed++;
+    }
 
-        if ($product->type() === 'variable') {
-            $this->parents->put($product->mtacId(), $product);
+    protected function processVariable(array $data): void
+    {
+        $data = [
+            ...$data,
+            'gtin' => "M{$data['gtin']}",
+            'type' => 'variable',
+            ...$this->getAttributes($data),
+        ];
+
+        $product = new Product(['meta' => ['key' => '_sku', 'value' => $data['gtin']]]);
+        $product->bind($data);
+
+        if (!vi()->isSimulating()) {
+            $product->save();
         }
+
+        $this->parents->put($product->mtacId(), $product);
     }
 
     protected function isVariable(array $product): bool

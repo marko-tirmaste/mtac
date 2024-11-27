@@ -17,6 +17,7 @@ return [
     'admin' => [
         'views' => [
             \Seeru\Mtac\Views\AdminView::class,
+            \Seeru\Mtac\Views\DashboardView::class,
         ],
     ],
 
