@@ -124,14 +124,17 @@ class ProductController
             ...vi()->make(ProductSyncService::class)->syncProducts($page, $perPage),
             'page' => $page,
             'per_page' => $perPage,
-            'updated_at' => date('Y-m-d H:i:s', $now),
+            'updated_at' => date('Y-m-d H:i:s', time()),
             'time' => round(microtime(true) - $start, 3),
             'memory' => memory_get_usage() - $memory,
         ];
 
         update_option('vdisain_mtac_schedule_products_last', $now);
         update_option('vdisain_mtac_schedule_products_next_page', $page * $perPage >= $report['total'] ? 1 : $page + 1);
-        update_option('vdisain_mtac_schedule_products_report', $report);
+        update_option('vdisain_mtac_schedule_products_report', [
+            ...$report,
+            'processed' => min(($page - 1) * $perPage + $report['processed'], $report['total']),
+        ]);
 
         return [
             ...$report,
@@ -209,7 +212,7 @@ class ProductController
             ...vi()->make(ProductSyncService::class)->syncProducts($page, $perPage),
             'page' => $page,
             'per_page' => $perPage,
-            'updated_at' => date('Y-m-d H:i:s', $now),
+            'updated_at' => date('Y-m-d H:i:s', time()),
             'time' => round(microtime(true) - $start, 3),
             'memory' => memory_get_usage() - $memory,
         ];
@@ -217,7 +220,10 @@ class ProductController
         if ($this->filterIsEmpty($filter)) {
             update_option('vdisain_mtac_schedule_products_last', $now);
             update_option('vdisain_mtac_schedule_products_next_page', $page * $perPage >= $report['total'] ? 1 : $page + 1);
-            update_option('vdisain_mtac_schedule_products_report', $report);
+            update_option('vdisain_mtac_schedule_products_report', [
+                ...$report,
+                'processed' => min(($page - 1) * $perPage + $report['processed'], $report['total']),
+            ]);
         }
 
         return new WP_REST_Response([

@@ -7,7 +7,6 @@ namespace Seeru\Mtac\Controllers;
 use WP_REST_Request;
 use WP_REST_Response;
 use Vdisain\Plugins\Interfaces\Support\Logger;
-use Vdisain\Plugins\Interfaces\Support\Log\Log;
 
 class CronController
 {
@@ -31,18 +30,20 @@ class CronController
 
         $next = (int) get_option('vdisain_mtac_schedule_products_last') + $gap;
 
-        Logger::dump([
-            'isRunning' => $isRunning,
-            'next' => $next,
-            'gap' => $gap,
-        ]);
-
-        if ($isRunning && time() < $next + 3600) {
+        if ($isRunning && $next + 3600 < time()) {
             // Process has been running for more than a hour. Probably stuck.
             $isRunning = false;
         }
 
+        Logger::dump([
+            'isRunning' => $isRunning,
+            'next' => date('Y-m-d H:i:s', $next),
+            'time' => date('Y-m-d H:i:s', time()),
+            'gap' => $gap,
+        ]);
+
         if (!empty($isRunning) || $next > time()) {
+            Logger::describe('Product sync is already running.');
             return null;
         }
 
