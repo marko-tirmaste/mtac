@@ -37,6 +37,11 @@ class CronController
             'gap' => $gap,
         ]);
 
+        if ($isRunning && time() < $next + 600) {
+            // Process has been running for more than 10 minutes. Probably stuck.
+            $isRunning = false;
+        }
+
         if (!empty($isRunning) || $next > time()) {
             return null;
         }
