@@ -108,7 +108,10 @@ class ProductController
      */
     public function import(): array
     {
+        set_time_limit(0);
+
         $now = time();
+        $memory = memory_get_usage();
         $start = microtime(true);
 
         $page = isset($_GET['page'])
@@ -117,13 +120,21 @@ class ProductController
 
         $perPage = isset($_GET['per_page']) ? (int) $_GET['per_page'] : 100;
 
-        $response = vi()->make(ProductSyncService::class)->syncProducts($page, $perPage);
+        $report = [
+            ...vi()->make(ProductSyncService::class)->syncProducts($page, $perPage),
+            'page' => $page,
+            'per_page' => $perPage,
+            'updated_at' => date('Y-m-d H:i:s', $now),
+            'time' => round(microtime(true) - $start, 3),
+            'memory' => memory_get_usage() - $memory,
+        ];
 
         update_option('vdisain_mtac_schedule_products_last', $now);
-        update_option('vdisain_mtac_schedule_products_next_page', $page * $perPage >= $response['total'] ? 1 : $page + 1);
+        update_option('vdisain_mtac_schedule_products_next_page', $page * $perPage >= $report['total'] ? 1 : $page + 1);
+        update_option('vdisain_mtac_schedule_products_report', $report);
 
         return [
-            ...$response,
+            ...$report,
             'page' => $page,
             'per_page' => $perPage,
             'time' => round(microtime(true) - $start, 3),
