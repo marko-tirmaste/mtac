@@ -77,6 +77,15 @@ defined('ABSPATH') or die;
                 </th>
                 <td><?= vi()->make(FileHandler::class)->getHumanReadableSize($this->products->memoryUsage) ?></td>
             </tr>
+            <tr>
+                <th
+                    role="row"
+                    class="min-w-[12rem] font-semibold text-left"
+                >
+                    Currently running
+                </th>
+                <td><?= empty(get_option('vdisain_mtac_schedule_products_running')) ? 'No' : 'Yes' ?></td>
+            </tr>
         </tbody>
     </table>
 </div>
