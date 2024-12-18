@@ -25,10 +25,10 @@ class ProductSyncService
     public function __construct(
         protected ProductService $service,
     ) {
-        // add_filter('vdhub/media/service', fn (): string => MediaService::class);
+        add_filter('vdhub/media/service', fn (): string => MediaService::class);
     }
 
-    public function syncProducts(int $page = 1, int $perPage = 100): array
+    public function syncProducts(int $page = 1, int $perPage = 50): array
     {
         $this->parents = new Collection();
 

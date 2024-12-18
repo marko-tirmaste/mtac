@@ -108,7 +108,7 @@ class ProductController
      */
     public function import(): array
     {
-        set_time_limit(0);
+        set_time_limit(3600);
 
         $now = time();
         $memory = memory_get_usage();
