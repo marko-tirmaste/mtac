@@ -8,6 +8,7 @@
  */
 namespace Seeru\Mtac\Controllers;
 use Seeru\Mtac\Services\SingleProductSyncService;
+use Vdisain\Plugins\Interfaces\Support\Performance\Performance;
 
 defined('VDAI_PATH') or die;
 
@@ -109,6 +110,8 @@ class ProductController
     public function import(): array
     {
         set_time_limit(3600);
+        Performance::init(VDAI_PATH_LOGS . '/mtac/performance.log');
+        Performance::start();
 
         $now = time();
         $memory = memory_get_usage();
@@ -118,8 +121,10 @@ class ProductController
             ? max((int) $_GET['page'], 1)
             : (int) get_option('vdisain_mtac_schedule_products_next_page', 1);
 
+
         $perPage = isset($_GET['per_page']) ? (int) $_GET['per_page'] : 100;
 
+        Performance::log('Before sync');
         $report = [
             ...vi()->make(ProductSyncService::class)->syncProducts($page, $perPage),
             'page' => $page,
@@ -128,6 +133,7 @@ class ProductController
             'time' => round(microtime(true) - $start, 3),
             'memory' => memory_get_usage() - $memory,
         ];
+        Performance::log('After sync');
 
         update_option('vdisain_mtac_schedule_products_last', $now);
         update_option('vdisain_mtac_schedule_products_next_page', $page * $perPage >= $report['total'] ? 1 : $page + 1);

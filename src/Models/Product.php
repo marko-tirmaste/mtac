@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Seeru\Mtac\Models;
 
 use \WP_Term;
+use Seeru\Mtac\Services\MediaService;
 use Vdisain\Plugins\Interfaces\Support\Arr;
 use Vdisain\Plugins\Interfaces\Support\Logger;
 use Vdisain\Plugins\Interfaces\Support\Collection;
@@ -263,5 +264,33 @@ class Product extends BaseProduct
             'images' => vi_config('mtac.field.images', 'import-update'),
             'codes' => vi_config('mtac.field.codes', 'import-update'),
         ];
+    }
+
+    public function save(): void
+    {
+        $this->saveProduct(vi()->locale());
+
+        if ($this->isVariation()) {
+            return; // For now, don't download media for variations
+        }
+
+        $attachmentIds = [];
+
+        if (
+            $this->allowed('images', 'import-update')
+            || ($this->allowed('images', value: 'import') && empty($this->products[vi()->locale()]->getWcProduct()?->get_id()))
+        ) {
+            $attachmentIds = vi()->make(MediaService::class)->download($this->products[vi()->locale()]->getWcProduct()->get_id(), $this->images);
+        }
+
+        foreach ($this->products as $language => $product) {
+            if ($language === vi()->locale()) {
+                continue;
+            }
+            $this->saveProduct($language, $attachmentIds);
+        }
+
+        $this->setWpmlDetails();
+        // $this->setAttributeWpmlDetails();
     }
 }
