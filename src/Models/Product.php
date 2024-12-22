@@ -65,6 +65,32 @@ class Product extends BaseProduct
         return $this->status;
     }
 
+    public function update(array $data = []): void
+    {
+        $product = $this->products['et']?->getWcProduct() ?? null;
+
+        if (!$product) {
+            $product = !empty($data['gtin']) ? wc_get_product(wc_get_product_id_by_sku($data['gtin'])) : null;
+        }
+
+        if (!$product) {
+            return;
+        }
+
+        $regularPrice = (string) $this->mapPrice($data);
+        $salePrice = (string) $this->mapPrice($data, 'sale_price');
+
+        $product->set_stock_status(!empty($data['availability']) && $data['availability'] === 'in stock' ? 'instock' : 'outofstock');
+        $product->set_price($salePrice ?? $regularPrice);
+        $product->set_regular_price($regularPrice);
+        $product->set_sale_price($salePrice);
+        $product->save();
+
+        if ($this->allowed('images', 'import-update') && (empty($data['type']) || $data['type'] !== 'variation')) {
+            vi()->make(MediaService::class)->download($product->get_id(), $this->mapMtacImages($data));
+        }
+    }
+
     protected function map(array $data): array
     {
         // Logger::describe('Data', $data);
