@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Seeru\Mtac\Models;
 
 use \WP_Term;
+use Seeru\Mtac\Services\MediaService;
 use Vdisain\Plugins\Interfaces\Support\Arr;
 use Vdisain\Plugins\Interfaces\Support\Logger;
 use Vdisain\Plugins\Interfaces\Support\Collection;
@@ -62,6 +63,32 @@ class Product extends BaseProduct
     public function status(): string
     {
         return $this->status;
+    }
+
+    public function update(array $data = []): void
+    {
+        $product = $this->products['et']?->getWcProduct() ?? null;
+
+        if (!$product) {
+            $product = !empty($data['gtin']) ? wc_get_product(wc_get_product_id_by_sku($data['gtin'])) : null;
+        }
+
+        if (!$product) {
+            return;
+        }
+
+        $regularPrice = (string) $this->mapPrice($data);
+        $salePrice = (string) $this->mapPrice($data, 'sale_price');
+
+        $product->set_stock_status(!empty($data['availability']) && $data['availability'] === 'in stock' ? 'instock' : 'outofstock');
+        $product->set_price($salePrice ?? $regularPrice);
+        $product->set_regular_price($regularPrice);
+        $product->set_sale_price($salePrice);
+        $product->save();
+
+        if ($this->allowed('images', 'import-update') && (empty($data['type']) || $data['type'] !== 'variation')) {
+            vi()->make(MediaService::class)->download($product->get_id(), $this->mapMtacImages($data));
+        }
     }
 
     protected function map(array $data): array
@@ -263,5 +290,33 @@ class Product extends BaseProduct
             'images' => vi_config('mtac.field.images', 'import-update'),
             'codes' => vi_config('mtac.field.codes', 'import-update'),
         ];
+    }
+
+    public function save(): void
+    {
+        $this->saveProduct(vi()->locale());
+
+        if ($this->isVariation()) {
+            return; // For now, don't download media for variations
+        }
+
+        $attachmentIds = [];
+
+        if (
+            $this->allowed('images', 'import-update')
+            || ($this->allowed('images', value: 'import') && empty($this->products[vi()->locale()]->getWcProduct()?->get_id()))
+        ) {
+            $attachmentIds = vi()->make(MediaService::class)->download($this->products[vi()->locale()]->getWcProduct()->get_id(), $this->images);
+        }
+
+        foreach ($this->products as $language => $product) {
+            if ($language === vi()->locale()) {
+                continue;
+            }
+            $this->saveProduct($language, $attachmentIds);
+        }
+
+        $this->setWpmlDetails();
+        // $this->setAttributeWpmlDetails();
     }
 }

@@ -8,6 +8,7 @@
  */
 namespace Seeru\Mtac\Controllers;
 use Seeru\Mtac\Services\SingleProductSyncService;
+use Vdisain\Plugins\Interfaces\Support\Performance\Performance;
 
 defined('VDAI_PATH') or die;
 
@@ -108,22 +109,41 @@ class ProductController
      */
     public function import(): array
     {
+        set_time_limit(3600);
+        Performance::init(VDAI_PATH_LOGS . '/mtac/performance.log');
+        Performance::start();
+
         $now = time();
+        $memory = memory_get_usage();
         $start = microtime(true);
 
         $page = isset($_GET['page'])
             ? max((int) $_GET['page'], 1)
             : (int) get_option('vdisain_mtac_schedule_products_next_page', 1);
 
-        $perPage = isset($_GET['per_page']) ? (int) $_GET['per_page'] : 100;
 
-        $response = vi()->make(ProductSyncService::class)->syncProducts($page, $perPage);
+        $perPage = isset($_GET['per_page']) ? (int) $_GET['per_page'] : 25;
+
+        Performance::log('Before sync');
+        $report = [
+            ...vi()->make(ProductSyncService::class)->syncProducts($page, $perPage),
+            'page' => $page,
+            'per_page' => $perPage,
+            'updated_at' => date('Y-m-d H:i:s', time()),
+            'time' => round(microtime(true) - $start, 3),
+            'memory' => memory_get_usage() - $memory,
+        ];
+        Performance::log('After sync');
 
         update_option('vdisain_mtac_schedule_products_last', $now);
-        update_option('vdisain_mtac_schedule_products_next_page', $page * $perPage >= $response['total'] ? 1 : $page + 1);
+        update_option('vdisain_mtac_schedule_products_next_page', $page * $perPage >= $report['total'] ? 1 : $page + 1);
+        update_option('vdisain_mtac_schedule_products_report', [
+            ...$report,
+            'processed' => min(($page - 1) * $perPage + $report['processed'], $report['total']),
+        ]);
 
         return [
-            ...$response,
+            ...$report,
             'page' => $page,
             'per_page' => $perPage,
             'time' => round(microtime(true) - $start, 3),
@@ -191,14 +211,14 @@ class ProductController
         $page = $request->has_param('page')
             ? max((int) $request->get_param('page'), 1)
             : ($this->filterIsEmpty($filter) ? (int) get_option('vdisain_mtac_schedule_products_next_page', 1) : 1);
-        $perPage = $request->has_param('per_page') ? (int) $request->get_param('per_page') : 100;
+        $perPage = $request->has_param('per_page') ? (int) $request->get_param('per_page') : 25;
 
         $report = [
             ...array_filter($filter),
             ...vi()->make(ProductSyncService::class)->syncProducts($page, $perPage),
             'page' => $page,
             'per_page' => $perPage,
-            'updated_at' => date('Y-m-d H:i:s', $now),
+            'updated_at' => date('Y-m-d H:i:s', time()),
             'time' => round(microtime(true) - $start, 3),
             'memory' => memory_get_usage() - $memory,
         ];
@@ -206,7 +226,10 @@ class ProductController
         if ($this->filterIsEmpty($filter)) {
             update_option('vdisain_mtac_schedule_products_last', $now);
             update_option('vdisain_mtac_schedule_products_next_page', $page * $perPage >= $report['total'] ? 1 : $page + 1);
-            update_option('vdisain_mtac_schedule_products_report', $report);
+            update_option('vdisain_mtac_schedule_products_report', [
+                ...$report,
+                'processed' => min(($page - 1) * $perPage + $report['processed'], $report['total']),
+            ]);
         }
 
         return new WP_REST_Response([

@@ -13,8 +13,8 @@ defined('ABSPATH') or die;
 
 class ProductSyncService
 {
-    // protected int $added = 0;
-    // protected int $updated = 0;
+    protected int $added = 0;
+    protected int $updated = 0;
     protected int $deleted = 0;
     protected int $processed = 0;
 
@@ -25,7 +25,7 @@ class ProductSyncService
     public function __construct(
         protected ProductService $service,
     ) {
-        // add_filter('vdhub/media/service', fn (): string => MediaService::class);
+        add_filter('vdhub/media/service', fn (): string => MediaService::class);
     }
 
     public function boot(): void
@@ -34,7 +34,7 @@ class ProductSyncService
         $this->products = new Collection();
     }
 
-    public function syncProducts(int $page = 1, int $perPage = 100): array
+    public function syncProducts(int $page = 1, int $perPage = 25): array
     {
         $this->boot();
 
@@ -54,6 +54,8 @@ class ProductSyncService
 
         return [
             'processed' => $this->processed,
+            'added' => $this->added,
+            'updated' => $this->updated,
             'total' => $total,
             'pages' => ceil($total / $perPage),
         ];
@@ -68,7 +70,9 @@ class ProductSyncService
             $data['type'] = 'variation';
         }
 
-        $product = new Product(['meta' => ['key' => '_sku', 'value' => $data['gtin']]]);
+        // $product = new Product(['meta' => ['key' => '_sku', 'value' => $data['gtin']]]);
+
+        $product = Product::find(sku: $data['gtin']);
         $product->bind($data);
 
         if ((empty($data['type']) && $this->isVariation(product: $data) || (!empty($data['type']) && $data['type'] === 'variation'))) {
@@ -77,7 +81,16 @@ class ProductSyncService
         }
 
         if (!vi()->isSimulating()) {
+            $this->processed++;
+            return;
+        }
+
+        if ($product->exists()) {
+            $product->update();
+            $this->updated++;
+        } else {
             $product->save();
+            $this->added++;
         }
 
         $this->processed++;
