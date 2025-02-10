@@ -28,9 +28,15 @@ class ProductSyncService
         // add_filter('vdhub/media/service', fn (): string => MediaService::class);
     }
 
-    public function syncProducts(int $page = 1, int $perPage = 100): array
+    public function boot(): void
     {
         $this->parents = new Collection();
+        $this->products = new Collection();
+    }
+
+    public function syncProducts(int $page = 1, int $perPage = 100): array
+    {
+        $this->boot();
 
         $this->products = $this->service->get()
             ->sortBy(fn(array $product): int => $product['id'] === ($product['item_group_id'] ?? 0) ? 0 : 1);
@@ -42,9 +48,7 @@ class ProductSyncService
                 $this->process($product);
             });
 
-        $this->parents->each(function (Product $product): void {
-            $product->sync();
-        });
+        $this->parents->each(fn (Product $product) => $product->sync());
 
         $total = $this->products->count();
 
@@ -123,7 +127,7 @@ class ProductSyncService
 
         $this->products
             ->filter(fn(array $p): bool => !empty($p['item_group_id']) && $p['item_group_id'] === $product['id'])
-            ->each(closure: function(array $p) use (&$attributes): void {
+            ->each(function(array $p) use (&$attributes): void {
                 if (!empty($p['color'])) {
                     $attributes['color'][] = $p['color'];
                 }
