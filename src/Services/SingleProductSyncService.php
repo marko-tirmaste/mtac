@@ -1,11 +1,10 @@
-<?php 
+<?php
 
 declare(strict_types=1);
 
 namespace Seeru\Mtac\Services;
 
 use Seeru\Mtac\Models\Product;
-use Vdisain\Plugins\Interfaces\Support\Collection;
 use Vdisain\Plugins\Interfaces\Support\Cache\Cache;
 use Vdisain\Plugins\Interfaces\Support\Logger;
 
@@ -15,8 +14,7 @@ class SingleProductSyncService extends ProductSyncService
 {
     public function syncProduct(string $sku): array
     {
-        $this->parents = new Collection();
-        $this->products = new Collection();
+        $this->boot();
 
         $product = $this->service->find(sku: $sku);
 
@@ -31,20 +29,18 @@ class SingleProductSyncService extends ProductSyncService
 
             $this->products = $this->products->merge(
                 $this->service->get()->filter(
-                    fn (array $p): bool => !empty($p['item_group_id']) && $p['item_group_id'] === $product['id'] && $p['id'] !== $product['id']
+                    fn (array $p): bool =>
+                        !empty($p['item_group_id'])
+                        && $p['item_group_id'] === $product['id']
+                        && $p['id'] !== $product['id']
                 )
             );
         }
 
         Cache::put('woocommerce_categories', $this->getCategories());
 
-        $this->products->each(function (array $product) {
-            $this->process($product);
-        });
-
-        $this->parents->each(function (Product $product): void {
-            $product->sync();
-        });
+        $this->products->each(fn (array $product) => $this->process($product));
+        $this->parents->each(fn (Product $product) => $product->sync());
 
         return [
             'processed' => $this->processed,
