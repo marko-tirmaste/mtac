@@ -44,7 +44,7 @@ class ProductController
         protected ProductService $service,
     ) {
         // Override the media service to keep gallery images
-        add_filter('vdhub/media-service', fn(string $class): string => \Seeru\Mtac\Services\MediaService::class);
+        // add_filter('vdhub/media-service', fn(string $class): string => \Seeru\Mtac\Services\MediaService::class);
     }
 
     public function show(WP_REST_Request $request): WP_REST_Response

@@ -5,17 +5,21 @@ declare(strict_types=1);
 namespace Seeru\Mtac\Models;
 
 use \WP_Term;
-use Seeru\Mtac\Services\MediaService;
 use Vdisain\Plugins\Interfaces\Support\Arr;
+// use Seeru\Mtac\Services\MediaService;
 use Vdisain\Plugins\Interfaces\Support\Logger;
 use Vdisain\Plugins\Interfaces\Support\Collection;
 use Vdisain\Plugins\Interfaces\Support\Cache\Cache;
+use Vdisain\Plugins\Interfaces\Services\MediaService;
+use Vdisain\ApiInterfaces\Models\Concerns\LogsActivity;
 use Vdisain\Plugins\Interfaces\Models\Product as BaseProduct;
 
 defined('VDAI_PATH') or die;
 
 class Product extends BaseProduct
 {
+    use LogsActivity;
+
     protected array $fillableMeta = [
         '_mtac_id',
         '_ean',
@@ -77,14 +81,28 @@ class Product extends BaseProduct
             return;
         }
 
-        $regularPrice = (string) $this->mapPrice($data);
-        $salePrice = (string) $this->mapPrice($data, 'sale_price');
+        $newStockStatus = !empty($data['availability']) && $data['availability'] === 'in stock' ? 'instock' : 'outofstock';
+        if ($product->get_stock_status() !== $newStockStatus) {
+            $product->set_stock_status($newStockStatus);
+            $this->logChanges('stock_status', $product->get_stock_status(), $newStockStatus);
+        }
 
-        $product->set_stock_status(!empty($data['availability']) && $data['availability'] === 'in stock' ? 'instock' : 'outofstock');
-        $product->set_price($salePrice ?? $regularPrice);
-        $product->set_regular_price($regularPrice);
-        $product->set_sale_price($salePrice);
-        $product->save();
+        $regularPrice = (string) $this->mapPrice($data);
+        if ($product->get_regular_price() !== $regularPrice) {
+            $product->set_regular_price($regularPrice);
+            $this->logChanges('regular_price', $product->get_regular_price(), $regularPrice);
+        }
+
+        $salePrice = (string) $this->mapPrice($data, 'sale_price');
+        if ($product->get_sale_price() !== $salePrice) {
+            $product->set_sale_price($salePrice);
+            $this->logChanges('sale_price', $product->get_sale_price(), $salePrice);
+        }
+
+        if ($this->hasChanges()) {
+            $product->update_meta_data('_updated_at', current_time('mysql'));
+            $product->save();
+        }
 
         if ($this->allowed('images', 'import-update') && (empty($data['type']) || $data['type'] !== 'variation')) {
             vi()->make(MediaService::class)->download($product->get_id(), $this->mapMtacImages($data));
